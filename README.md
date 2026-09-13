@@ -1,3 +1,4 @@
+Site gerado pelo ChatGPT Plus - GPT-5.6 Sol (Médio)
 Realizar teste abaixos
 
 1. Criação e identificação
