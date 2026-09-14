@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Super Agenda - Proteção Executiva</title>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><div class="brand-name">bradesco</div><span class="brand-line"></span><div class="brand-product"><strong>Super Agenda</strong><span>Proteção Executiva</span></div></div>
+  </header>
+  <nav class="sidebar" aria-label="Navegação principal">
+    <button class="nav-button active" data-go="home"><span class="nav-icon">▦</span><span>Visão geral</span></button>
+    <button class="nav-button" data-go="form"><span class="nav-icon">▣</span><span>Agendas</span></button>
+    <button class="nav-button" id="reports"><span class="nav-icon">▤</span><span>Relatórios</span></button>
+    <div class="security-note"><strong>◉ Ambiente demonstrativo</strong>Utilize somente dados fictícios.</div>
+  </nav>
+
+  <main>
+    <section id="home" class="screen active">
+      <div class="heading"><div><span class="eyebrow">VISÃO GERAL</span><h1>Bem-vindo à Super Agenda.</h1><p>Abra uma agenda e acompanhe cada etapa da operação.</p></div><button class="btn btn-primary" data-go="form"><span>＋</span> Nova agenda</button></div>
+      <div class="summary-grid">
+        <article class="summary featured"><span class="summary-symbol">▣</span><div class="summary-data"><span>Agendas em andamento</span><strong id="active-count">0</strong><small>Operações ativas agora</small></div></article>
+        <article class="summary neutral"><span class="summary-symbol">◷</span><div class="summary-data"><span>Próximas agendas</span><strong>0</strong><small>Para os próximos 7 dias</small></div></article>
+        <article class="summary neutral"><span class="summary-symbol">✓</span><div class="summary-data"><span>Concluídas no mês</span><strong>0</strong><small>Setembro de 2026</small></div></article>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><h2>Minhas agendas</h2><p>Localize e continue uma operação.</p></div><label class="search" aria-label="Pesquisar agendas"><span>⌕</span><input id="search" placeholder="Buscar por ID, título ou protegido"></label></div>
+        <div id="agenda-list"></div>
+      </div>
+    </section>
+
+    <section id="form" class="screen form-wrap">
+      <button class="back" data-go="home">← Voltar para visão geral</button>
+      <div class="heading"><div><span class="eyebrow">ETAPA 1 DE 3</span><h1>Abertura da agenda</h1><p>Preencha somente as informações essenciais da operação.</p></div></div>
+      <div class="steps"><div class="step current"><span class="step-circle">1</span><div class="step-copy"><strong>Abertura</strong><small>Informações iniciais</small></div></div><span class="step-line"></span><div class="step locked"><span class="step-circle">2</span><div class="step-copy"><strong>Registros</strong><small>Bloqueada</small></div></div><span class="step-line"></span><div class="step locked"><span class="step-circle">3</span><div class="step-copy"><strong>Conclusão</strong><small>Bloqueada</small></div></div></div>
+      <form id="agenda-form" novalidate>
+        <div class="card form-card"><div class="section-head"><span class="section-icon">▤</span><div><h2>Identificação</h2><p>Dê um nome claro para localizar esta agenda depois.</p></div></div><div class="form-grid id-grid"><label>Título da agenda *<input id="title" required placeholder="Ex.: Visita institucional - São Paulo"></label><label>ID da agenda<div class="readonly" id="generated-id">APE-2026-0001</div><small>Gerado automaticamente</small></label></div></div>
+        <div class="card form-card"><div class="section-head"><span class="section-icon">▣</span><div><h2>Período</h2><p>Informe quando a proteção está prevista para acontecer.</p></div></div><div class="form-grid two"><label>Data de início *<input id="start" type="date" required></label><label>Data final prevista *<input id="end" type="date" required></label></div></div>
+        <div class="card form-card"><div class="section-head"><span class="section-icon">♟</span><div><h2>Protegidos</h2><p>Selecione os nomes principais ou adicione outras pessoas manualmente.</p></div></div><div id="vip-list" class="vip-list"></div><button class="btn btn-outline add-vip" type="button" id="add-vip">＋ Adicionar outro protegido</button></div>
+        <div class="card form-card"><div class="section-head"><span class="section-icon">✎</span><div><h2>Observação inicial</h2><p>Campo opcional para uma orientação breve.</p></div></div><label>Observação<textarea id="notes" maxlength="300" placeholder="Ex.: Agenda solicitada para acompanhamento de visita institucional."></textarea></label></div>
+        <div id="error" class="error" role="alert"></div>
+        <div class="form-actions"><button class="btn btn-quiet btn-large" type="button" data-go="home">Cancelar</button><button class="btn btn-primary btn-large" type="submit">Abrir agenda →</button></div>
+      </form>
+    </section>
+
+    <section id="dashboard" class="screen">
+      <button class="back" data-go="home">← Voltar para todas as agendas</button>
+      <div class="success"><span class="success-symbol">✓</span><div class="success-copy"><strong>Agenda aberta com sucesso!</strong><span>A etapa de registros operacionais já está disponível.</span></div></div>
+      <div class="dashboard-title"><div><span class="agenda-id" id="dash-id"></span><h1 id="dash-title"></h1><p id="dash-period"></p></div><span class="pill">● Em andamento</span></div>
+      <div class="progress"><div class="progress-step done"><span class="progress-circle">✓</span><div class="progress-copy"><strong>1. Abertura</strong><small>Concluída</small></div></div><span class="connector active"></span><div class="progress-step current"><span class="progress-circle">2</span><div class="progress-copy"><strong>2. Registros</strong><small>Disponível</small></div></div><span class="connector"></span><div class="progress-step"><span class="progress-circle">▣</span><div class="progress-copy"><strong>3. Conclusão</strong><small>Bloqueada</small></div></div></div>
+      <div class="dashboard-grid">
+        <div class="card"><div class="card-head"><div><h2>Resumo da agenda</h2><p>Informações registradas na abertura.</p></div><button class="btn btn-outline" id="edit">Editar dados</button></div><dl class="details"><div class="detail"><dt>▣ Período</dt><dd id="detail-period"></dd></div><div class="detail"><dt>♟ Protegidos</dt><dd id="detail-vips"></dd></div><div class="detail" id="notes-row"><dt>✎ Observação inicial</dt><dd id="detail-notes"></dd></div></dl></div>
+        <aside class="card next-card"><span class="next-symbol">◆</span><small>PRÓXIMO PASSO</small><h2>Registre a primeira ação operacional</h2><p>Inclua contatos, confirmações e movimentações realizadas nesta agenda.</p><button class="btn btn-primary full" id="next-step">＋ Registrar primeira ação</button><span class="prototype-hint">Demonstração da próxima etapa</span></aside>
+      </div>
+      <div class="card"><div class="card-head"><div><h2>Linha do tempo</h2><p>Histórico dos acontecimentos desta operação.</p></div><span class="pill">1 registro</span></div><div class="timeline-item"><span class="timeline-marker">✓</span><div class="timeline-copy"><strong>Agenda aberta</strong><p>Informações iniciais registradas. Etapa operacional desbloqueada.</p><small>Agora · registro local</small></div></div></div>
+    </section>
+  </main>
+  <footer>Protótipo visual · Identidade, tipografia e ícones sujeitos à homologação das áreas responsáveis do Bradesco.</footer>
+  <div id="toast" class="toast" role="status"></div>
+
+  <script src="js/aplicativo.js"></script>
+</body>
+</html>
