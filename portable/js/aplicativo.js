@@ -86,7 +86,7 @@
       function fillForm() {
         const agenda = selectedAgenda();
         if (!agenda) return;
-        $("#title").value = agenda.title; $("#start").value = agenda.start; $("#end").value = agenda.end; $("#notes").value = agenda.notes || ""; $("#generated-id").textContent = agenda.id;
+        $("#start-time").value = agenda.startTime || ""; $("#title").value = agenda.title; $("#start").value = agenda.start; $("#end").value = agenda.end; $("#notes").value = agenda.notes || ""; $("#generated-id").textContent = agenda.id;
         $("#vip-list").innerHTML = ""; agenda.vips.forEach(addVip); editingId = agenda.id;
       }
       function loadAgendas() {
@@ -124,8 +124,13 @@
       function renderDashboard() {
         const agenda = selectedAgenda();
         if (!agenda) return;
-        const period = `${dateBR(agenda.start)} a ${dateBR(agenda.end)}`;
+        const period = `${dateBR(agenda.start)} ${agenda.startTime || ""} a ${dateBR(agenda.end)}`;
         const situation = agendaSituation(agenda);
+        const lead = AgendaRules.leadTime(agenda);
+        $("#lead-summary").textContent = '◷ Antecedência mínima: 48 horas corridas. ' + lead.text;
+        $("#lead-summary").className = `notice ${lead.status}`;
+        $("#created-label").textContent = agenda.createdAt ? new Date(agenda.createdAt).toLocaleString('pt-BR') : 'Data de criação não registrada (agenda antiga)';
+        renderOperationSummary(agenda);
         $("#dash-id").textContent = agenda.id; $("#dash-title").textContent = agenda.title; $("#dash-period").textContent = `▣ ${period}`; $("#detail-period").textContent = period;
         $("#dash-status").textContent = situation.label;
         $("#dash-status").className = `pill ${situation.className}`;
@@ -153,22 +158,107 @@
       });
       $("#search").addEventListener("input", (event) => renderHome(event.target.value));
       $("#reports").addEventListener("click", () => toast("Os relatórios serão planejados em uma etapa futura."));
-      $("#next-step").addEventListener("click", () => toast("A Etapa 2 será construída na próxima fase do protótipo."));
+      $("#next-step").addEventListener("click", openOperations);
       $("#edit").addEventListener("click", () => { fillForm(); show("form"); });
       $("#agenda-form").addEventListener("submit", (event) => {
         event.preventDefault();
         const error = $("#error"); const title = $("#title").value.trim(); const start = $("#start").value; const end = $("#end").value; const vips = $$(".vip-entry").map(protectedValue);
         let message = "";
-        if (!title || !start || !end) message = "Preencha o título e as duas datas para continuar.";
+        if (!title || !start || !end || !$("#start-time").value) message = "Preencha o título, as datas e o horário de início para continuar.";
         else if (end < start) message = "A data final não pode ser anterior à data de início.";
         else if (!vips.length || vips.some((name) => !name)) message = "Selecione ou informe o nome de todos os protegidos adicionados.";
         else if (new Set(vips.map((name) => name.toLocaleLowerCase("pt-BR"))).size !== vips.length) message = "O mesmo protegido foi informado mais de uma vez.";
         if (message) { error.textContent = message; error.classList.add("show"); error.scrollIntoView({ behavior: "smooth", block: "center" }); return; }
-        const agenda = { id: editingId || nextId(), title, start, end, vips, notes: $("#notes").value.trim() };
+        const previous = editingId ? agendas.find(item => item.id === editingId) : null;
+        const agenda = { ...previous, id: editingId || nextId(), createdAt: previous ? previous.createdAt : new Date().toISOString(), title, start, startTime: $("#start-time").value, end, vips, notes: $("#notes").value.trim() };
+        agenda.leadTime = { ...AgendaRules.leadTime(agenda), evaluatedAt: new Date().toISOString() };
         if (editingId) agendas = agendas.map((item) => item.id === editingId ? agenda : item);
         else agendas.push(agenda);
         selectedAgendaId = agenda.id; editingId = null; saveAgendas(); error.classList.remove("show"); renderHome(); renderDashboard(); show("dashboard");
       });
 
+      const operationForm = $("#operation-form");
+      let operationDirty = false;
+      const operationValue = (name) => operationForm.elements.namedItem(name).value.trim();
+      function updateTransport() {
+        $$('[data-transport]').forEach(group => {
+          group.hidden = group.dataset.transport !== operationValue('transport');
+          group.querySelectorAll('input').forEach(input => input.disabled = group.hidden);
+        });
+      }
+      function updateMap() {
+        const address = AgendaRules.address(Object.fromEntries(['street','number','district','city','state','cep'].map(key => [key, operationValue(key)])));
+        const ready = operationValue('street') && operationValue('city') && operationValue('state');
+        $('#address-preview').textContent = ready ? address : 'Preencha rua, cidade e UF para consultar.';
+        $('#maps-link').hidden = !ready;
+        if (ready) $('#maps-link').href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(address);
+        else $('#maps-link').removeAttribute('href');
+      }
+      function openOperations() {
+        const agenda = selectedAgenda();
+        if (!agenda) return;
+        operationForm.reset();
+        for (const [key, value] of Object.entries(agenda.operation?.fields || {})) {
+          const input = operationForm.elements.namedItem(key);
+          if (input) input.value = value;
+        }
+        $('#operation-agenda').textContent = `${agenda.id} · ${agenda.title}`;
+        $('#operation-error').classList.remove('show');
+        operationDirty = false;
+        updateTransport(); updateMap(); show('operations');
+      }
+      function renderOperationSummary(agenda) {
+        const operation = agenda.operation;
+        $('#next-step').textContent = operation ? 'Editar registros operacionais' : 'Preencher registros operacionais';
+        if (!operation) { $('#operation-summary').textContent = 'Nenhum dado operacional salvo.'; return; }
+        const f = operation.fields;
+        const transport = f.transport === 'car' ? `Carro · ${f.brand || ''} ${f.model || ''} · ${f.plate || ''} · ${f.color || ''} · ${f.year || ''}` : f.transport === 'helicopter' ? `Helicóptero · ${f.heliCompany || ''} · ${f.boarding || ''} → ${f.landing || ''}` : f.transport === 'plane' ? `Avião · ${f.airline || ''} · Voo ${f.flight || ''} · ${f.departure || ''} → ${f.arrival || ''}` : 'Não informado';
+        const entries = [
+          ['Preenchimento', operation.status === 'complete' ? 'Dados desta versão preenchidos' : 'Rascunho'],
+          ['Local', [f.venue, AgendaRules.address(f), f.complement, f.reference].filter(Boolean).join(' · ')],
+          ['Empresa de segurança', f.company || 'Não informada'],
+          ['VSPP', `${f.vspp || 'Não informado'}${f.gender ? ' · ' + f.gender : ''}`],
+          ['Transporte', transport],
+          ['Atualizado em', new Date(operation.updatedAt).toLocaleString('pt-BR')]
+        ];
+        $('#operation-summary').innerHTML = entries.map(([label,value]) => `<p><strong>${safe(label)}:</strong> ${safe(value)}</p>`).join('');
+      }
+      function saveOperation(draft) {
+        const agenda = selectedAgenda();
+        if (!agenda) return;
+        const fields = Object.fromEntries(new FormData(operationForm));
+        Object.keys(fields).forEach(key => fields[key] = fields[key].trim());
+        let message = '';
+        const required = ['street','number','district','city','state','company','vspp','cpf','gender','transport'];
+        const conditional = { car: ['plate','brand','model','color','year'], helicopter: ['heliCompany','boarding','landing'], plane: ['airline','flight','departure','arrival'] };
+        if (!draft && [...required, ...(conditional[fields.transport] || [])].some(key => !fields[key])) message = 'Preencha os campos com * ou use Salvar rascunho para continuar depois.';
+        else if (!draft && fields.cpf && !AgendaRules.validCPF(fields.cpf)) message = 'Confira o CPF: os dígitos informados não são válidos.';
+        else if (!draft && fields.cep && !/^\d{8}$/.test(fields.cep.replace(/\D/g,''))) message = 'O CEP deve conter 8 dígitos.';
+        else if (!draft && fields.transport === 'car' && !/^[A-Z]{3}\d[A-Z0-9]\d{2}$/.test(fields.plate.toUpperCase().replace(/[-\s]/g,''))) message = 'Confira a placa. Exemplos: ABC-1234 ou ABC1D23.';
+        else if (!draft && fields.transport === 'car' && (!/^\d{4}$/.test(fields.year) || +fields.year < 1900 || +fields.year > 2100)) message = 'Informe um ano válido com quatro dígitos.';
+        const departure = fields.transport === 'helicopter' ? fields.boarding : fields.departure;
+        const arrival = fields.transport === 'helicopter' ? fields.landing : fields.arrival;
+        if (!draft && !message && departure && arrival && new Date(arrival) < new Date(departure)) message = 'A chegada ou o desembarque não pode ser anterior à partida. Confira também as datas.';
+        if (message) { $('#operation-error').textContent = message; $('#operation-error').classList.add('show'); $('#operation-error').scrollIntoView({block:'center'}); return; }
+        const previous = agenda.operation;
+        agenda.operation = { fields, status: draft ? 'draft' : 'complete', updatedAt: new Date().toISOString() };
+        try { saveAgendas(); } catch { agenda.operation = previous; toast('Não foi possível salvar. Verifique o armazenamento do navegador.'); return; }
+        operationDirty = false;
+        renderDashboard(); show('dashboard'); toast(draft ? 'Rascunho salvo.' : 'Dados operacionais salvos.');
+      }
+      operationForm.addEventListener('input', () => { operationDirty = true; updateMap(); });
+      operationForm.addEventListener('change', () => { operationDirty = true; updateTransport(); updateMap(); });
+      operationForm.addEventListener('submit', event => { event.preventDefault(); saveOperation(false); });
+      $('#save-draft').addEventListener('click', () => saveOperation(true));
+      $('#operation-back').addEventListener('click', () => {
+        if (operationDirty && !confirm('Sair sem salvar as alterações operacionais?')) return;
+        operationDirty = false; renderDashboard(); show('dashboard');
+      });
+      document.addEventListener('click', event => {
+        if (!operationDirty || !$('#operations').classList.contains('active') || !event.target.closest('[data-go]')) return;
+        if (!confirm('Sair sem salvar as alterações operacionais?')) { event.preventDefault(); event.stopImmediatePropagation(); }
+        else operationDirty = false;
+      }, true);
+      window.addEventListener('beforeunload', event => { if (operationDirty) { event.preventDefault(); event.returnValue = ''; } });
       addVip(); bindNavigation(); loadAgendas(); $("#generated-id").textContent = nextId();
     })();
