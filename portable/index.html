@@ -22,9 +22,9 @@
     <section id="home" class="screen active">
       <div class="heading"><div><span class="eyebrow">VISÃO GERAL</span><h1>Bem-vindo à Super Agenda.</h1><p>Abra uma agenda e acompanhe cada etapa da operação.</p></div><button class="btn btn-primary" data-go="form"><span>＋</span> Nova agenda</button></div>
       <div class="summary-grid">
-        <article class="summary featured"><span class="summary-symbol">▣</span><div class="summary-data"><span>Agendas em andamento</span><strong id="active-count">0</strong><small>Operações ativas agora</small></div></article>
-        <article class="summary neutral"><span class="summary-symbol">◷</span><div class="summary-data"><span>Próximas agendas</span><strong id="upcoming-count">0</strong><small>Com início em uma data futura</small></div></article>
-        <article class="summary neutral"><span class="summary-symbol">✓</span><div class="summary-data"><span>Concluídas no mês</span><strong>0</strong><small>Setembro de 2026</small></div></article>
+        <article class="summary summary-active"><span class="summary-symbol">▣</span><div class="summary-data"><span>Agendas em andamento</span><strong id="active-count">0</strong><small>Operações ativas agora</small></div></article>
+        <article class="summary summary-upcoming"><span class="summary-symbol">◷</span><div class="summary-data"><span>Próximas agendas</span><strong id="upcoming-count">0</strong><small>Com início em uma data futura</small></div></article>
+        <article class="summary summary-completed"><span class="summary-symbol">✓</span><div class="summary-data"><span>Concluídas no mês</span><strong id="completed-count">0</strong><small id="completed-month"></small></div></article>
       </div>
       <div class="card">
         <div class="card-head"><div><h2>Minhas agendas</h2><p>Localize e continue uma operação.</p></div><label class="search" aria-label="Pesquisar agendas"><span>⌕</span><input id="search" placeholder="Buscar por ID, título ou protegido"></label></div>
@@ -38,7 +38,7 @@
       <div class="steps"><div class="step current"><span class="step-circle">1</span><div class="step-copy"><strong>Abertura</strong><small>Informações iniciais</small></div></div><span class="step-line"></span><div class="step locked"><span class="step-circle">2</span><div class="step-copy"><strong>Registros</strong><small>Bloqueada</small></div></div><span class="step-line"></span><div class="step locked"><span class="step-circle">3</span><div class="step-copy"><strong>Conclusão</strong><small>Bloqueada</small></div></div></div>
       <form id="agenda-form" novalidate>
         <div class="card form-card"><div class="section-head"><span class="section-icon">▤</span><div><h2>Identificação</h2><p>Dê um nome claro para localizar esta agenda depois.</p></div></div><div class="form-grid id-grid"><label>Título da agenda *<input id="title" required placeholder="Ex.: Visita institucional - São Paulo"></label><label>ID da agenda<div class="readonly" id="generated-id">APE-2026-0001</div><small>Gerado automaticamente</small></label></div></div>
-        <div class="card form-card"><div class="section-head"><span class="section-icon">▣</span><div><h2>Período</h2><p>Informe quando a proteção está prevista para acontecer.</p></div></div><div class="form-grid two"><label>Data de início *<input id="start" type="date" required></label><label>Horário de início *<input id="start-time" type="time" required><small>Horário local do computador; usado no cálculo de 48 horas.</small></label><label>Data final prevista *<input id="end" type="date" required></label></div></div>
+        <div class="card form-card"><div class="section-head"><span class="section-icon">▣</span><div><h2>Período</h2><p>Informe quando a proteção está prevista para acontecer.</p></div></div><div class="form-grid two"><label>Data de recebimento da solicitação *<input id="received-date" type="date" required><small>Informe quando a demanda chegou, mesmo que o cadastro seja feito depois.</small></label><label>Data de início *<input id="start" type="date" required></label><label>Horário de início (opcional)<input id="start-time" type="time"><small>Informação operacional. Não interfere no prazo de preparação.</small></label><label>Data final prevista *<input id="end" type="date" required></label></div></div>
         <div class="card form-card"><div class="section-head"><span class="section-icon">♟</span><div><h2>Protegidos</h2><p>Selecione os nomes principais ou adicione outras pessoas manualmente.</p></div></div><div id="vip-list" class="vip-list"></div><button class="btn btn-outline add-vip" type="button" id="add-vip">＋ Adicionar outro protegido</button></div>
         <div class="card form-card"><div class="section-head"><span class="section-icon">✎</span><div><h2>Observação inicial</h2><p>Campo opcional para uma orientação breve.</p></div></div><label>Observação<textarea id="notes" maxlength="300" placeholder="Ex.: Agenda solicitada para acompanhamento de visita institucional."></textarea></label></div>
         <div id="error" class="error" role="alert"></div>
@@ -50,15 +50,16 @@
       <button class="back" data-go="home">← Voltar para todas as agendas</button>
       <div class="success"><span class="success-symbol">✓</span><div class="success-copy"><strong>Agenda registrada</strong><span>Consulte e atualize os dados da operação.</span></div></div>
       <div class="dashboard-title"><div><span class="agenda-id" id="dash-id"></span><h1 id="dash-title"></h1><p id="dash-period"></p></div><span class="pill" id="dash-status">Em andamento</span></div>
-      <div class="progress"><div class="progress-step done"><span class="progress-circle">✓</span><div class="progress-copy"><strong>1. Abertura</strong><small>Concluída</small></div></div><span class="connector active"></span><div class="progress-step current"><span class="progress-circle">2</span><div class="progress-copy"><strong>2. Registros</strong><small>Disponível</small></div></div><span class="connector"></span><div class="progress-step"><span class="progress-circle">▣</span><div class="progress-copy"><strong>3. Conclusão</strong><small>Bloqueada</small></div></div></div>
+      <div class="progress" id="agenda-progress"><div class="progress-step done"><span class="progress-circle">✓</span><div class="progress-copy"><strong>1. Abertura</strong><small>Concluída</small></div></div><span class="connector active"></span><div class="progress-step current"><span class="progress-circle">2</span><div class="progress-copy"><strong>2. Registros</strong><small>Disponível</small></div></div><span class="connector"></span><div class="progress-step"><span class="progress-circle">▣</span><div class="progress-copy"><strong>3. Conclusão</strong><small>Bloqueada</small></div></div></div>
       <div id="lead-summary" class="notice" role="status"></div><div class="dashboard-grid">
         <div class="card"><div class="card-head"><div><h2>Resumo da agenda</h2><p>Informações registradas na abertura.</p></div><button class="btn btn-outline" id="edit">Editar dados</button></div><dl class="details"><div class="detail"><dt>▣ Período</dt><dd id="detail-period"></dd></div><div class="detail"><dt>♟ Protegidos</dt><dd id="detail-vips"></dd></div><div class="detail" id="notes-row"><dt>✎ Observação inicial</dt><dd id="detail-notes"></dd></div></dl></div>
-        <aside class="card next-card"><span class="next-symbol">◆</span><small>PRÓXIMO PASSO</small><h2>Organize a operação</h2><p>Preencha o local, a empresa de segurança, o VSPP e o transporte.</p><button class="btn btn-primary full" id="next-step">Preencher registros operacionais</button><span class="prototype-hint">Etapa 2 · primeira versão</span></aside>
+        <aside class="card next-card"><span class="next-symbol">◆</span><small>PRÓXIMO PASSO</small><h2>Organize a operação</h2><p>Preencha o local, a empresa de segurança, o VSPP e o transporte.</p><button class="btn btn-primary full" id="next-step">Preencher registros operacionais</button><button class="btn btn-outline full" id="open-conclusion" disabled>Conclusão bloqueada</button><span class="prototype-hint" id="conclusion-help">Salve os dados operacionais para liberar a conclusão.</span></aside>
       </div>
+      <div class="card form-card"><h2>Valores da operação</h2><div id="cost-summary"></div></div>
       <div class="card form-card"><h2>Dados operacionais</h2><div id="operation-summary"></div></div>
       <div class="card form-card"><h2>Contatos importantes</h2><div id="contacts-summary"></div></div>
       <div class="card form-card"><h2>Fotos e anexos</h2><div id="gallery-summary" class="attachment-grid"></div></div>
-      <div class="card"><div class="card-head"><div><h2>Linha do tempo</h2><p>Histórico dos acontecimentos desta operação.</p></div><span class="pill">1 registro</span></div><div class="timeline-item"><span class="timeline-marker">✓</span><div class="timeline-copy"><strong>Agenda aberta</strong><p>Informações iniciais registradas. Etapa operacional desbloqueada.</p><small><span id="created-label">Data de criação não registrada</span></small></div></div></div>
+      <div class="card"><div class="card-head"><div><h2>Linha do tempo</h2><p>Salvamentos e alterações desta agenda, do mais recente ao mais antigo.</p></div><span class="pill" id="history-count">0 registros</span></div><div id="history-list"></div></div>
     </section>
 <section id="operations" class="screen">
 <button type="button" class="back" id="operation-back">← Voltar ao resumo da agenda</button>
@@ -82,6 +83,18 @@
 <p id="gallery-total" aria-live="polite"></p><p id="gallery-message" class="attachment-message" role="alert"></p><p id="gallery-empty">Nenhum anexo adicionado.</p><div id="gallery-editor" class="attachment-grid"></div>
 <p class="contact-hint">Salve os dados ou o rascunho para guardar os anexos. Eles ficam neste navegador e computador; não são enviados à internet. Não limpe os dados do navegador.</p></div>
 <div id="operation-error" class="error" role="alert"></div><div class="form-actions"><button type="button" class="btn btn-outline btn-large" id="save-draft">Salvar rascunho</button><button type="submit" class="btn btn-primary btn-large">Salvar dados operacionais</button></div></form></section>
+<section id="conclusion" class="screen form-wrap">
+<button type="button" class="back" id="conclusion-back">← Voltar ao resumo da agenda</button>
+<div class="heading"><div><span class="eyebrow">ETAPA 3 DE 3</span><h1>Conclusão da operação</h1><p id="conclusion-agenda"></p><p>Informe os valores totais contratados. Campos com * são obrigatórios; use 0,00 quando não houver custo.</p></div></div>
+<form id="conclusion-form" novalidate>
+<div class="card form-card"><div class="section-head"><span class="section-icon">R$</span><div><h2>Custos da operação</h2><p>Some todos os profissionais no valor de VSPP e todos os trechos no valor de transportes.</p></div></div>
+<div class="form-grid two"><label>Valor total de VSPP (R$) *<input id="cost-staff" inputmode="decimal" placeholder="Ex.: 1.500,00" autocomplete="off"></label><label>Valor total de transportes (R$) *<input id="cost-transport" inputmode="decimal" placeholder="Ex.: 800,00" autocomplete="off"></label></div></div>
+<div class="card form-card"><h2>Outras despesas</h2><p>Opcional. Adicione uma linha para cada despesa, com título e valor.</p><div id="cost-extras"></div><button type="button" class="btn btn-outline" id="add-cost">＋ Adicionar despesa</button></div>
+<div class="card form-card"><label>Observações da conclusão<textarea id="cost-notes" placeholder="Informações adicionais sobre os valores ou encerramento."></textarea></label></div>
+<div id="cost-error" class="error" role="alert"></div>
+<div class="cost-total"><div><span>Valor total da operação</span><output id="cost-total" aria-live="polite">R$ 0,00</output><small id="cost-total-help">VSPP + transportes + outras despesas. Calculado automaticamente.</small></div></div>
+<div class="form-actions"><button type="button" class="btn btn-outline btn-large" id="cost-draft">Salvar rascunho dos valores</button><button type="submit" class="btn btn-primary btn-large" id="cost-finish">✓ Concluir operação</button></div>
+</form></section>
   </main>
   <footer>Protótipo visual · Identidade, tipografia e ícones sujeitos à homologação das áreas responsáveis do Bradesco.</footer>
   <div id="toast" class="toast" role="status"></div>
@@ -91,6 +104,8 @@
   <script src="js/equipe-transporte.js"></script>
   <script src="js/contatos.js"></script>
   <script src="js/galeria.js"></script>
+  <script src="js/historico.js"></script>
+  <script src="js/conclusao.js"></script>
   <script src="js/aplicativo.js"></script>
 </body>
 </html>

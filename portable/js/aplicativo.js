@@ -42,6 +42,7 @@
         return `${year}-${month}-${day}`;
       }
       function agendaSituation(agenda) {
+        if (agenda.conclusion?.status === "complete") return {label:"Concluída",className:"completed"};
         const today = todayISO();
         if (agenda.start > today) return { label: "Próxima", className: "upcoming" };
         if (agenda.end < today) return { label: "Período encerrado", className: "past" };
@@ -86,7 +87,7 @@
       function fillForm() {
         const agenda = selectedAgenda();
         if (!agenda) return;
-        $("#start-time").value = agenda.startTime || ""; $("#title").value = agenda.title; $("#start").value = agenda.start; $("#end").value = agenda.end; $("#notes").value = agenda.notes || ""; $("#generated-id").textContent = agenda.id;
+        $("#received-date").value = agenda.receivedDate || ""; $("#start-time").value = agenda.startTime || ""; $("#title").value = agenda.title; $("#start").value = agenda.start; $("#end").value = agenda.end; $("#notes").value = agenda.notes || ""; $("#generated-id").textContent = agenda.id;
         $("#vip-list").innerHTML = ""; agenda.vips.forEach(addVip); editingId = agenda.id;
       }
       function loadAgendas() {
@@ -104,10 +105,16 @@
       }
       function renderHome(query = "") {
         const today = todayISO();
-        const activeAgendas = agendas.filter((agenda) => agenda.start <= today && agenda.end >= today);
-        const upcomingAgendas = agendas.filter((agenda) => agenda.start > today);
+        const activeAgendas = agendas.filter((agenda) => agenda.conclusion?.status !== "complete" && agenda.start <= today && agenda.end >= today);
+        const upcomingAgendas = agendas.filter((agenda) => agenda.conclusion?.status !== "complete" && agenda.start > today);
         $("#active-count").textContent = String(activeAgendas.length);
         $("#upcoming-count").textContent = String(upcomingAgendas.length);
+        const now = new Date();
+        $('#completed-month').textContent = now.toLocaleDateString('pt-BR', {month:'long',year:'numeric'});
+        $('#completed-count').textContent = agendas.filter(a=>{
+          const date = new Date(a.conclusion?.completedAt);
+          return a.conclusion?.status==='complete' && date.getMonth()===now.getMonth() && date.getFullYear()===now.getFullYear();
+        }).length;
         const list = $("#agenda-list");
         const normalizedQuery = query.trim().toLocaleLowerCase("pt-BR");
         const matches = agendas.filter((agenda) => [agenda.id, agenda.title, ...agenda.vips].join(" ").toLocaleLowerCase("pt-BR").includes(normalizedQuery)).reverse();
@@ -127,16 +134,60 @@
         const period = `${dateBR(agenda.start)} ${agenda.startTime || ""} a ${dateBR(agenda.end)}`;
         const situation = agendaSituation(agenda);
         const lead = AgendaRules.leadTime(agenda);
-        $("#lead-summary").textContent = '◷ Antecedência mínima: 48 horas corridas. ' + lead.text;
+        $("#lead-summary").textContent = '◷ Preparação mínima: 2 dias corridos (cálculo por datas, sem horários). ' + lead.text;
         $("#lead-summary").className = `notice ${lead.status}`;
-        $("#created-label").textContent = agenda.createdAt ? new Date(agenda.createdAt).toLocaleString('pt-BR') : 'Data de criação não registrada (agenda antiga)';
+        AgendaHistory.render(agenda);
         renderOperationSummary(agenda);
+        renderConclusion(agenda);
         $("#dash-id").textContent = agenda.id; $("#dash-title").textContent = agenda.title; $("#dash-period").textContent = `▣ ${period}`; $("#detail-period").textContent = period;
         $("#dash-status").textContent = situation.label;
         $("#dash-status").className = `pill ${situation.className}`;
         $("#detail-vips").innerHTML = agenda.vips.map((vip) => `<span class="vip-chip">${safe(vip)}</span>`).join("");
         $("#detail-notes").textContent = agenda.notes || ""; $("#notes-row").style.display = agenda.notes ? "grid" : "none";
       }
+      function renderConclusion(agenda) {
+        const ready = agenda.operation?.status === 'complete';
+        const data = agenda.conclusion;
+        const completed = data?.status === 'complete';
+        $('#open-conclusion').disabled = !ready;
+        $('#open-conclusion').textContent = !ready ? 'Conclusão bloqueada' : completed ? 'Consultar / corrigir valores' : 'Preencher conclusão →';
+        $('#conclusion-help').textContent = !ready ? 'Salve os dados operacionais para liberar a conclusão.' : completed ? 'Operação concluída. Valores disponíveis no resumo.' : 'Etapa 3 disponível: registre os custos e conclua a operação.';
+        const steps = [...document.querySelectorAll('#agenda-progress .progress-step')];
+        steps[1].className = 'progress-step ' + (ready ? 'done' : 'current');
+        steps[1].querySelector('small').textContent = ready ? 'Preenchida' : 'Disponível';
+        steps[1].querySelector('.progress-circle').textContent = ready ? '✓' : '2';
+        steps[2].className = 'progress-step ' + (completed ? 'done' : ready ? 'current' : '');
+        steps[2].querySelector('small').textContent = completed ? 'Concluída' : ready ? 'Disponível' : 'Bloqueada';
+        steps[2].querySelector('.progress-circle').textContent = completed ? '✓' : '3';
+        document.querySelectorAll('#agenda-progress .connector')[1].classList.toggle('active', ready);
+        if (!data) { $('#cost-summary').textContent = 'Valores ainda não informados.'; return; }
+        const rows = [['Total de VSPP',data.staffCents],['Total de transportes',data.transportCents],...(data.extras||[]).map(x=>[x.title||'Despesa sem título',x.amountCents])];
+        $('#cost-summary').innerHTML = `<p><span class="pill ${completed?'completed':''}">${completed?'Valores finais · Operação concluída':'Rascunho dos valores · Operação não concluída'}</span></p>` + rows.map(([title,value])=>`<p><strong>${safe(title)}:</strong> ${value==null?'Não informado':safe(Conclusion.money(value))}</p>`).join('') + `<p class="cost-summary-total"><strong>${completed?'Valor total da operação':'Total parcial informado'}: ${safe(Conclusion.money(data.totalCents))}</strong></p>` + (data.notes?`<p>${safe(data.notes)}</p>`:'');
+      }
+      $('#open-conclusion').addEventListener('click', () => {
+        const agenda=selectedAgenda();
+        if (!agenda || agenda.operation?.status!=='complete') return;
+        Conclusion.load(agenda); show('conclusion');
+      });
+      Conclusion.init((values,draft) => {
+        const agenda=selectedAgenda();
+        if (!agenda || agenda.operation?.status!=='complete') throw Error('Salve os registros operacionais antes da conclusão.');
+        const previous=agenda.conclusion, at=new Date().toISOString();
+        const conclusion={...values,status:draft?'draft':'complete',updatedAt:at,completedAt:draft?null:(previous?.completedAt || at)};
+        const updated={...agenda,conclusion};
+        const changes=[];
+        if (previous?.staffCents!==values.staffCents) changes.push('Total de VSPP: '+(values.staffCents==null?'não informado':Conclusion.money(values.staffCents))+'.');
+        if (previous?.transportCents!==values.transportCents) changes.push('Total de transportes: '+(values.transportCents==null?'não informado':Conclusion.money(values.transportCents))+'.');
+        if (JSON.stringify(previous?.extras||[])!==JSON.stringify(values.extras)) changes.push('Outras despesas atualizadas: '+values.extras.length+' registro(s).');
+        if ((previous?.notes||'')!==values.notes) changes.push('Observações da conclusão atualizadas.');
+        changes.push('Total '+(draft?'parcial':'da operação')+': '+Conclusion.money(values.totalCents)+'.');
+        updated.history=[...AgendaHistory.entries(agenda),{at,title:draft?'Rascunho dos valores salvo':previous?.status==='complete'?'Valores da conclusão corrigidos':'Operação concluída',changes}];
+        updated.historyLegacy=agenda.historyLegacy ?? !Array.isArray(agenda.history);
+        const previousAgendas=agendas;
+        agendas=agendas.map(item=>item.id===agenda.id?updated:item);
+        try {saveAgendas();} catch(e) {agendas=previousAgendas;throw Error('Não foi possível salvar os valores e o histórico. Verifique o armazenamento do navegador e tente novamente.');}
+        Conclusion.saved();renderHome();renderDashboard();show('dashboard');toast(draft?'Rascunho dos valores salvo.':'Valores salvos. Operação concluída.');
+      },()=>{renderDashboard();show('dashboard');});
       function bindNavigation() {
         $$('[data-go="home"]').forEach((button) => button.onclick = () => { editingId = null; renderHome($("#search").value); show("home"); });
         $$('[data-go="form"]').forEach((button) => button.onclick = () => { clearForm(); show("form"); });
@@ -164,17 +215,24 @@
         event.preventDefault();
         const error = $("#error"); const title = $("#title").value.trim(); const start = $("#start").value; const end = $("#end").value; const vips = $$(".vip-entry").map(protectedValue);
         let message = "";
-        if (!title || !start || !end || !$("#start-time").value) message = "Preencha o título, as datas e o horário de início para continuar.";
+        if (!title || !start || !end || !$("#received-date").value) message = "Preencha o título, a data de recebimento, a data de início e a data final.";
         else if (end < start) message = "A data final não pode ser anterior à data de início.";
         else if (!vips.length || vips.some((name) => !name)) message = "Selecione ou informe o nome de todos os protegidos adicionados.";
         else if (new Set(vips.map((name) => name.toLocaleLowerCase("pt-BR"))).size !== vips.length) message = "O mesmo protegido foi informado mais de uma vez.";
         if (message) { error.textContent = message; error.classList.add("show"); error.scrollIntoView({ behavior: "smooth", block: "center" }); return; }
         const previous = editingId ? agendas.find(item => item.id === editingId) : null;
-        const agenda = { ...previous, id: editingId || nextId(), createdAt: previous ? previous.createdAt : new Date().toISOString(), title, start, startTime: $("#start-time").value, end, vips, notes: $("#notes").value.trim() };
+        const agenda = { ...previous, id: editingId || nextId(), createdAt: previous ? previous.createdAt : new Date().toISOString(), title, start, receivedDate: $("#received-date").value, startTime: $("#start-time").value, end, vips, notes: $("#notes").value.trim() };
         agenda.leadTime = { ...AgendaRules.leadTime(agenda), evaluatedAt: new Date().toISOString() };
+        AgendaHistory.opening(agenda, previous);
+        const previousAgendas = agendas;
         if (editingId) agendas = agendas.map((item) => item.id === editingId ? agenda : item);
-        else agendas.push(agenda);
-        selectedAgendaId = agenda.id; editingId = null; saveAgendas(); error.classList.remove("show"); renderHome(); renderDashboard(); show("dashboard");
+        else agendas = [...agendas, agenda];
+        try { saveAgendas(); } catch (reason) {
+          agendas = previousAgendas;
+          error.textContent = 'Não foi possível salvar a agenda e seu histórico. Verifique o armazenamento do navegador.';
+          error.classList.add('show'); error.scrollIntoView({block:'center'}); return;
+        }
+        selectedAgendaId = agenda.id; editingId = null; error.classList.remove("show"); renderHome(); renderDashboard(); show("dashboard");
       });
 
       const operationForm = $("#operation-form");
@@ -198,6 +256,7 @@
         }
         $('#operation-agenda').textContent = `${agenda.id} · ${agenda.title}`;
         $('#operation-error').classList.remove('show');
+        $('#save-draft').hidden = agenda.conclusion?.status === 'complete';
         operationDirty = false;
         OperationRepeater.load(agenda.operation); ContactBook.load(agenda.operation); Gallery.load(agenda); updateMap(); show('operations');
       }
@@ -224,6 +283,7 @@
         if (Gallery.isBusy()) return;
         const agenda = selectedAgenda();
         if (!agenda) return;
+        if (draft && agenda.conclusion?.status === 'complete') return;
         const fields = Object.fromEntries(new FormData(operationForm));
         Object.keys(fields).forEach(key => fields[key] = fields[key].trim());
         let message = '';
@@ -238,14 +298,19 @@
         if (!draft && !message) message = Gallery.validate(attachments);
         if (message) { $('#operation-error').textContent = message; $('#operation-error').classList.add('show'); $('#operation-error').scrollIntoView({block:'center'}); return; }
         const previous = agenda.operation;
+        const previousHistory = agenda.history;
+        const previousLegacy = agenda.historyLegacy;
         Gallery.setBusy(true);
         try {
           await Gallery.prepare(agenda.id);
           agenda.operation = { fields, ...multi, contacts, attachments, schemaVersion: 4, status: draft ? 'draft' : 'complete', updatedAt: new Date().toISOString() };
+          AgendaHistory.operation(agenda, previous, previousHistory);
           saveAgendas();
           Gallery.committed(agenda.id, Gallery.metadata(previous), attachments);
         } catch (reason) {
           agenda.operation = previous;
+          if (previousHistory === undefined) delete agenda.history; else agenda.history = previousHistory;
+          if (previousLegacy === undefined) delete agenda.historyLegacy; else agenda.historyLegacy = previousLegacy;
           $('#operation-error').textContent = 'Não foi possível salvar. ' + (reason.message || 'Verifique o armazenamento do navegador.');
           $('#operation-error').classList.add('show'); $('#operation-error').scrollIntoView({block:'center'}); return;
         } finally { Gallery.setBusy(false); }
@@ -265,11 +330,12 @@
         operationDirty = false; renderDashboard(); show('dashboard');
       });
       document.addEventListener('click', event => {
+        if ($('#conclusion').classList.contains('active') && event.target.closest('[data-go]') && !Conclusion.canLeave()) { event.preventDefault(); event.stopImmediatePropagation(); return; }
         if (Gallery.isBusy() && event.target.closest('[data-go]')) { event.preventDefault(); event.stopImmediatePropagation(); toast('Aguarde o salvamento dos anexos.'); return; }
         if (!operationDirty || !$('#operations').classList.contains('active') || !event.target.closest('[data-go]')) return;
         if (!confirm('Sair sem salvar as alterações operacionais?')) { event.preventDefault(); event.stopImmediatePropagation(); }
         else operationDirty = false;
       }, true);
-      window.addEventListener('beforeunload', event => { if (operationDirty || Gallery.isBusy()) { event.preventDefault(); event.returnValue = ''; } });
+      window.addEventListener('beforeunload', event => { if (operationDirty || Gallery.isBusy() || Conclusion.isDirty()) { event.preventDefault(); event.returnValue = ''; } });
       addVip(); bindNavigation(); loadAgendas(); $("#generated-id").textContent = nextId();
     })();

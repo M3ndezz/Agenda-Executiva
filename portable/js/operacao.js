@@ -1,12 +1,17 @@
 // Regras compartilhadas pelo cadastro e pelo futuro painel de conclusão.
 window.AgendaRules = {
   leadTime(agenda) {
-    if (!agenda.createdAt) return { status: 'unknown', text: 'Sem histórico para calcular: data de criação não registrada.' };
-    if (!agenda.startTime) return { status: 'unknown', text: 'Informe o horário de início para calcular a antecedência.' };
-    const hours = (new Date(`${agenda.start}T${agenda.startTime}:00`).getTime() - new Date(agenda.createdAt).getTime()) / 3600000;
-    if (!Number.isFinite(hours)) return { status: 'unknown', text: 'Datas insuficientes para calcular.' };
-    const duration = `${Math.floor(Math.abs(hours))}h ${Math.floor(Math.abs(hours) * 60) % 60}min`;
-    return { hours, status: hours < 48 ? 'short' : 'ok', text: hours < 0 ? `Abaixo de 48 horas — agenda criada ${duration} após o início previsto.` : `${hours < 48 ? 'Abaixo de 48 horas' : 'Antecedência atendida'} — ${duration} entre a abertura e o início previsto.` };
+    const dayNumber = value => {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) return NaN;
+      const date = new Date(value + 'T00:00:00Z');
+      return Number.isFinite(date.getTime()) && date.toISOString().slice(0,10) === value ? date.getTime()/86400000 : NaN;
+    };
+    const days = dayNumber(agenda.start) - dayNumber(agenda.receivedDate);
+    const base = { basis:'calendar-days', minimumDays:2 };
+    if (!Number.isFinite(days)) return { ...base, status:'unknown', text:'Informe a data de recebimento da solicitação na abertura para calcular o prazo de preparação.' };
+    const duration = `${Math.abs(days)} ${Math.abs(days) === 1 ? 'dia corrido' : 'dias corridos'}`;
+    const text = days < 0 ? `Fora do prazo — solicitação recebida ${duration} após a data de início.` : days === 0 ? 'Abaixo do mínimo — solicitação recebida no mesmo dia da atividade.' : `${days < 2 ? 'Abaixo do mínimo' : 'Prazo atendido'} — ${duration} entre o recebimento e o início da atividade.`;
+    return { ...base, days, status:days < 2 ? 'short' : 'ok', text };
   },
   validCPF(value) {
     const digits = value.replace(/\D/g, '');
