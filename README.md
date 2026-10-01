@@ -69,3 +69,13 @@ neste ZIP. Mantenha os originais como cópia. Use a mesma pasta, navegador e
 perfil ao atualizar. Limpar dados do navegador pode apagar agendas e anexos.
 Remover do formulário só altera o cadastro após salvar. Cancelar mantém os
 anexos do último salvamento. Falhas de gravação preservam o cadastro anterior.
+
+LINHA DO TEMPO
+Cada salvamento da abertura ou dos registros operacionais (inclusive rascunhos) registra data, hora e resumo das alterações, por agenda. Salvar sem mudanças também gera um registro. Alterações anteriores a esta atualização não podem ser recuperadas. O histórico é mantido junto com as agendas neste navegador.
+
+ETAPA 3 — CONCLUSÃO E VALORES
+Salve os dados operacionais (sem ser rascunho) para liberar a conclusão. Informe os totais de VSPP e transportes e adicione outras despesas com título e valor. Digite em reais: 1500,00 ou 1.500,00. Zero é aceito; vazio não significa zero ao concluir. O total é automático, calculado em centavos e salvo por agenda. Um rascunho não conclui a operação. Concluir atualiza o status e o contador mensal; correções mantêm a data original de conclusão e ficam no histórico.
+Para atualizar, substitua index.html e as pastas js e css na mesma pasta, usando o mesmo navegador. Não limpe os dados do navegador.
+
+PRAZO DE PREPARAÇÃO — REGRA ATUAL
+O prazo considera a data de recebimento da solicitação e a data de início da atividade, sem horários. Mínimo: 2 dias corridos. Dia 1 ao dia 3 atende ao mínimo; dia 1 ao dia 4 equivale a 3 dias de preparação. Não é uma medição de 48 horas exatas. Horário de início é opcional e informativo. Agendas antigas precisam ter a data de recebimento preenchida em Editar dados; a data de criação não é usada como substituta.
