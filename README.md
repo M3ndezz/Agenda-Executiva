@@ -79,3 +79,59 @@ Para atualizar, substitua index.html e as pastas js e css na mesma pasta, usando
 
 PRAZO DE PREPARAÇÃO — REGRA ATUAL
 O prazo considera a data de recebimento da solicitação e a data de início da atividade, sem horários. Mínimo: 2 dias corridos. Dia 1 ao dia 3 atende ao mínimo; dia 1 ao dia 4 equivale a 3 dias de preparação. Não é uma medição de 48 horas exatas. Horário de início é opcional e informativo. Agendas antigas precisam ter a data de recebimento preenchida em Editar dados; a data de criação não é usada como substituta.
+
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.4",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "Controle de acesso temporário",
+      "weight": "Bolder",
+      "size": "Large",
+      "wrap": true
+    },
+    {
+      "type": "FactSet",
+      "facts": [
+        {
+          "title": "Código Gera:",
+          "value": "@{triggerBody()?['Title']}"
+        },
+        {
+          "title": "Nome:",
+          "value": "@{triggerBody()?['NomePessoa']}"
+        },
+        {
+          "title": "Término:",
+          "value": "@{convertTimeZone(triggerBody()?['FimAcesso'], 'UTC', 'E. South America Standard Time', 'dd/MM/yyyy HH:mm')}"
+        }
+      ]
+    },
+    {
+      "type": "TextBlock",
+      "text": "Após revogar todos os grupos vinculados a este Código Gera no sistema de acesso, marque a confirmação e clique no botão.",
+      "wrap": true
+    },
+    {
+      "type": "Input.Toggle",
+      "id": "todosGruposRevogados",
+      "title": "Confirmo que revoguei todos os grupos deste acesso.",
+      "value": "false",
+      "valueOn": "true",
+      "valueOff": "false",
+      "isRequired": true,
+      "errorMessage": "Confirme a revogação de todos os grupos antes de continuar."
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.Submit",
+      "title": "Confirmar revogação",
+      "data": {
+        "acao": "confirmarRevogacao"
+      }
+    }
+  ]
+}
