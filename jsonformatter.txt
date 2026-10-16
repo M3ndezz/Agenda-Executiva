@@ -1,0 +1,41 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.4",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "Revogação confirmada",
+      "weight": "Bolder",
+      "size": "Large",
+      "color": "Good",
+      "wrap": true
+    },
+    {
+      "type": "FactSet",
+      "facts": [
+        {
+          "title": "Código Gera:",
+          "value": "@{body('ObterAcessoAtual')?['Title']}"
+        },
+        {
+          "title": "Nome:",
+          "value": "@{body('ObterAcessoAtual')?['NomePessoa']}"
+        },
+        {
+          "title": "Confirmado por:",
+          "value": "@{body('RespostaCartao')?['responder']?['displayName']}"
+        },
+        {
+          "title": "Confirmado em:",
+          "value": "@{convertTimeZone(body('RespostaCartao')?['responseTime'], 'UTC', 'E. South America Standard Time', 'dd/MM/yyyy HH:mm')}"
+        }
+      ]
+    },
+    {
+      "type": "TextBlock",
+      "text": "A confirmação da revogação de todos os grupos foi registrada no SharePoint.",
+      "wrap": true
+    }
+  ]
+}
