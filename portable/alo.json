@@ -1,0 +1,52 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.4",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "Cadastro cancelado",
+      "weight": "Bolder",
+      "size": "Large",
+      "color": "Attention",
+      "wrap": true
+    },
+    {
+      "type": "FactSet",
+      "facts": [
+        {
+          "title": "Código Gera:",
+          "value": "@{body('ObterAcessoAtual')?['Title']}"
+        },
+        {
+          "title": "Nome:",
+          "value": "@{body('ObterAcessoAtual')?['NomePessoa']}"
+        },
+        {
+          "title": "Cancelado por:",
+          "value": "@{coalesce(body('ObterAcessoAtual')?['CanceladoPor']?['DisplayName'], 'Não informado')}"
+        },
+        {
+          "title": "Cancelado em:",
+          "value": "@{if(empty(body('ObterAcessoAtual')?['CanceladoEm']), 'Não informado', convertTimeZone(body('ObterAcessoAtual')?['CanceladoEm'], 'UTC', 'E. South America Standard Time', 'dd/MM/yyyy HH:mm'))}"
+        }
+      ]
+    },
+    {
+      "type": "TextBlock",
+      "text": "Motivo do cancelamento",
+      "weight": "Bolder",
+      "wrap": true
+    },
+    {
+      "type": "TextBlock",
+      "text": "@{coalesce(body('ObterAcessoAtual')?['MotivoCancelamento'], 'Não informado')}",
+      "wrap": true
+    },
+    {
+      "type": "TextBlock",
+      "text": "Este cadastro foi cancelado no aplicativo. A resposta a este cartão não registrou uma confirmação de revogação.",
+      "wrap": true
+    }
+  ]
+}
