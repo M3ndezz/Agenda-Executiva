@@ -16,18 +16,18 @@ and(
   ),
   equals(
     body('ObterAcessoAtual')?['FimAcesso'],
-    triggerBody()?['FimAcesso']
+    body('ObterDadosCartao')?['FimAcesso']
   ),
   equals(
     string(body('ObterAcessoAtual')?['GruposAcesso']),
-    string(triggerBody()?['GruposAcesso'])
+    string(body('ObterDadosCartao')?['GruposAcesso'])
   ),
   equals(
     body('ObterAcessoAtual')?['Title'],
-    triggerBody()?['Title']
+    body('ObterDadosCartao')?['Title']
   ),
   equals(
     body('ObterAcessoAtual')?['NomePessoa'],
-    triggerBody()?['NomePessoa']
+    body('ObterDadosCartao')?['NomePessoa']
   )
 )
