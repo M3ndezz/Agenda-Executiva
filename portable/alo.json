@@ -1,52 +1,46 @@
-{
-  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
-  "type": "AdaptiveCard",
-  "version": "1.4",
-  "body": [
-    {
-      "type": "TextBlock",
-      "text": "Cadastro cancelado",
-      "weight": "Bolder",
-      "size": "Large",
-      "color": "Attention",
-      "wrap": true
-    },
-    {
-      "type": "FactSet",
-      "facts": [
+If(
+    IsBlank(Form1.Updates.InicioAcesso) ||
+    IsBlank(Form1.Updates.FimAcesso);
+    Notify(
+        "Preencha a data e o horário de início e término.";
+        NotificationType.Error
+    );
+
+    Form1.Updates.FimAcesso <= Form1.Updates.InicioAcesso;
+    Notify(
+        "O término do acesso deve ser posterior ao início.";
+        NotificationType.Error
+    );
+
+    Form1.Mode = FormMode.New;
+    SubmitForm(Form1);
+
+    Form1.Mode = FormMode.Edit;
+    With(
         {
-          "title": "Código Gera:",
-          "value": "@{body('ObterAcessoAtual')?['Title']}"
-        },
-        {
-          "title": "Nome:",
-          "value": "@{body('ObterAcessoAtual')?['NomePessoa']}"
-        },
-        {
-          "title": "Cancelado por:",
-          "value": "@{coalesce(body('ObterAcessoAtual')?['CanceladoPor']?['DisplayName'], 'Não informado')}"
-        },
-        {
-          "title": "Cancelado em:",
-          "value": "@{if(empty(body('ObterAcessoAtual')?['CanceladoEm']), 'Não informado', convertTimeZone(body('ObterAcessoAtual')?['CanceladoEm'], 'UTC', 'E. South America Standard Time', 'dd/MM/yyyy HH:mm'))}"
-        }
-      ]
-    },
-    {
-      "type": "TextBlock",
-      "text": "Motivo do cancelamento",
-      "weight": "Bolder",
-      "wrap": true
-    },
-    {
-      "type": "TextBlock",
-      "text": "@{coalesce(body('ObterAcessoAtual')?['MotivoCancelamento'], 'Não informado')}",
-      "wrap": true
-    },
-    {
-      "type": "TextBlock",
-      "text": "Este cadastro foi cancelado no aplicativo. A resposta a este cartão não registrou uma confirmação de revogação.",
-      "wrap": true
-    }
-  ]
-}
+            registroAtual: IfError(
+                LookUp(
+                    'Controle de Acessos Temporários - Data Center';
+                    ID = Form1.Item.ID
+                );
+                Blank()
+            )
+        };
+        If(
+            IsBlank(registroAtual.ID);
+            Notify(
+                "Não foi possível consultar o cadastro. Tente novamente.";
+                NotificationType.Error
+            );
+
+            registroAtual.StatusControle.Value <> "Pendente" ||
+            !IsBlank(registroAtual.RevogacaoConfirmadaEm);
+            Notify(
+                "Este cadastro já foi cancelado ou revogado. As alterações não foram salvas. Saia da edição e atualize os dados.";
+                NotificationType.Warning
+            );
+
+            SubmitForm(Form1)
+        )
+    )
+)
