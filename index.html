@@ -1,0 +1,811 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>Assessoria e Proteção Executiva - Segurança Institucional</title>
+    <link rel="stylesheet" href="css/estilos.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-name">bradesco</div>
+        <span class="brand-line"></span>
+        <div class="brand-product">
+          <strong>Assessoria e Proteção Executiva</strong><span>Segurança Institucional</span>
+        </div>
+      </div>
+    </header>
+    <nav class="sidebar" aria-label="Navegação principal">
+      <button class="nav-button active" data-go="home">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m3 10 9-7 9 7"/><path d="M5 9v11h5v-6h4v6h5V9"/></svg></span><span>Visão geral</span>
+      </button>
+      <button class="nav-button" data-go="form">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4m10-4v4M3 11h18m-13 4h2m4 0h2m-8 3h2"/></svg></span><span>Agendas</span>
+      </button>
+      <button class="nav-button" id="reports" data-report-nav>
+        <span class="nav-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 16v-3m4 3V8m4 8v-5"/></svg></span><span>Relatórios</span>
+      </button>
+      <button class="nav-button" data-go="vspp-screen">
+        <span class="nav-icon"><svg viewBox="0 0 32 32" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 23v-8c0-4 3-7 8-7h3l1-3 3 1 1 3h4c3 0 5 3 5 6v4l-7 2v5h-4v-4H10v4H6v-3Z"/><path d="M25 13h.1M29 17h-4M17 9l2 2M3 19l2 1"/></svg></span><span>VSPPs</span>
+      </button>
+      <button class="nav-button" data-go="vehicles-screen">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 10 2-6h10l2 6M3 10h18v8H3zM5 18v3m14-3v3M6 14h2m8 0h2"/></svg></span><span>Veículos</span>
+      </button>
+      <div class="security-note">
+        <strong>◉ Ambiente demonstrativo</strong>Utilize somente dados
+        fictícios.
+      </div>
+    </nav>
+
+    <main>
+      <section id="home" class="screen active">
+        <div class="heading">
+          <div>
+            <span class="eyebrow">VISÃO GERAL</span>
+            <h1>Bem-vindo à Assessoria e Proteção Executiva.</h1>
+            <p>Abra uma agenda e acompanhe cada etapa da operação.</p>
+          </div>
+          <button class="btn btn-primary" data-go="form">
+            <span>＋</span> Nova agenda
+          </button>
+        </div>
+        <div class="summary-grid">
+          <article class="summary summary-active">
+            <span class="summary-symbol" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M9 11h6M9 15h4"/></svg></span>
+            <div class="summary-data">
+              <span>Agendas em andamento</span
+              ><strong id="active-count">0</strong
+              ><small>Operações ativas agora</small>
+            </div>
+          </article>
+          <article class="summary summary-upcoming">
+            <span class="summary-symbol" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+            <div class="summary-data">
+              <span>Próximas agendas</span><strong id="upcoming-count">0</strong
+              ><small>Com início em uma data futura</small>
+            </div>
+          </article>
+          <article class="summary summary-completed">
+            <span class="summary-symbol" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg></span>
+            <div class="summary-data">
+              <span>Concluídas no mês</span
+              ><strong id="completed-count">0</strong
+              ><small id="completed-month"></small>
+            </div>
+          </article>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h2>Minhas agendas</h2>
+              <p>Localize e continue uma operação.</p>
+            </div>
+            <label class="search" aria-label="Pesquisar agendas"
+              ><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input
+                id="search"
+                placeholder="Buscar por ID, título ou protegido"
+            /></label>
+          </div>
+          <div id="agenda-list"></div>
+        </div>
+      </section>
+
+      <section id="form" class="screen form-wrap">
+        <button class="back" data-go="home">← Voltar para visão geral</button>
+        <div class="heading">
+          <div>
+            <span class="eyebrow">ETAPA 1 DE 3</span>
+            <h1>Abertura da agenda</h1>
+            <p>Preencha somente as informações essenciais da operação.</p>
+          </div>
+        </div>
+        <div class="steps">
+          <div class="step current">
+            <span class="step-circle">1</span>
+            <div class="step-copy">
+              <strong>Abertura</strong><small>Informações iniciais</small>
+            </div>
+          </div>
+          <span class="step-line"></span>
+          <div class="step locked">
+            <span class="step-circle">2</span>
+            <div class="step-copy">
+              <strong>Registros</strong><small>Bloqueada</small>
+            </div>
+          </div>
+          <span class="step-line"></span>
+          <div class="step locked">
+            <span class="step-circle">3</span>
+            <div class="step-copy">
+              <strong>Conclusão</strong><small>Bloqueada</small>
+            </div>
+          </div>
+        </div>
+        <form id="agenda-form" novalidate>
+          <div class="card form-card">
+            <div class="section-head">
+              <span class="section-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" focusable="false"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+              </span>
+              <div>
+                <h2>Identificação</h2>
+                <p>Dê um nome claro para localizar esta agenda depois.</p>
+              </div>
+            </div>
+            <div class="form-grid id-grid">
+              <label
+                >Título da agenda *<input
+                  id="title"
+                  required
+                  placeholder="Ex.: Visita institucional - São Paulo" /></label
+              ><label
+                >ID da agenda
+                <div class="readonly" id="generated-id">APE-2026-0001</div>
+                <small>Gerado automaticamente</small></label
+              >
+            </div>
+          </div>
+          <div class="card form-card">
+            <div class="section-head">
+              <span class="section-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" focusable="false"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 11h18M8 15h2M14 15h2"/></svg>
+              </span>
+              <div>
+                <h2>Período</h2>
+                <p>
+                  Quando a preparação começou e quando a atividade acontecerá.
+                </p>
+              </div>
+            </div>
+            <div class="form-grid two">
+              <label
+                >Data e hora de início *<input
+                  id="received-date"
+                  type="datetime-local"
+                  required
+                /><small
+                  >Data e hora em que você recebeu a demanda e iniciou a
+                  preparação.</small
+                ></label
+              ><label
+                >Data e hora da execução *<input
+                  id="start"
+                  type="datetime-local"
+                  required
+                /><small>Data e hora em que a atividade será realizada.</small></label
+              >
+            </div>
+          </div>
+          <div class="card form-card">
+            <div class="section-head">
+              <span class="section-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" focusable="false"><circle cx="9" cy="8" r="3"/><path d="M3 21v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6M21 21v-2a6 6 0 0 0-4-5.65"/></svg>
+              </span>
+              <div>
+                <h2>Protegidos</h2>
+                <p>
+                  Selecione os nomes principais ou adicione outras pessoas
+                  manualmente.
+                </p>
+              </div>
+            </div>
+            <div id="vip-list" class="vip-list"></div>
+            <button class="btn btn-outline add-vip" type="button" id="add-vip">
+              ＋ Adicionar outro protegido
+            </button>
+          </div>
+          <div class="card form-card">
+            <div class="section-head">
+              <span class="section-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M12 4H6a3 3 0 0 0-3 3v11a3 3 0 0 0 3 3h11a3 3 0 0 0 3-3v-6M16 3a2.12 2.12 0 0 1 3 3l-9 9-4 1 1-4Z M14 5l3 3"/></svg>
+              </span>
+              <div>
+                <h2>Observação inicial</h2>
+                <p>Campo opcional para uma orientação breve.</p>
+              </div>
+            </div>
+            <label
+              >Observação<textarea
+                id="notes"
+                maxlength="300"
+                placeholder="Ex.: Agenda solicitada para acompanhamento de visita institucional."
+              ></textarea>
+            </label>
+          </div>
+          <div id="error" class="error" role="alert"></div>
+          <div class="form-actions">
+            <button
+              class="btn btn-quiet btn-large"
+              type="button"
+              data-go="home"
+            >
+              Cancelar</button
+            ><button class="btn btn-primary btn-large" type="submit">
+              Abrir agenda →
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section id="dashboard" class="screen">
+        <button class="back" data-go="home">
+          ← Voltar para todas as agendas
+        </button>
+        <div class="dashboard-title">
+          <div>
+            <span class="agenda-id" id="dash-id"></span>
+            <h1 id="dash-title"></h1>
+            <p class="dashboard-period"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 11h18M8 15h2M14 15h2"/></svg><span id="dash-period"></span></p>
+          </div>
+          <span class="pill" id="dash-status">Em andamento</span>
+        </div>
+        <div class="progress" id="agenda-progress">
+          <div class="progress-step done">
+            <span class="progress-circle">✓</span>
+            <div class="progress-copy">
+              <strong>1. Abertura</strong><small>Concluída</small>
+            </div>
+          </div>
+          <span class="connector active"></span>
+          <div class="progress-step current">
+            <span class="progress-circle">2</span>
+            <div class="progress-copy">
+              <strong>2. Registros</strong><small>Disponível</small>
+            </div>
+          </div>
+          <span class="connector"></span>
+          <div class="progress-step">
+            <span class="progress-circle">▣</span>
+            <div class="progress-copy">
+              <strong>3. Conclusão</strong><small>Bloqueada</small>
+            </div>
+          </div>
+        </div>
+        <div id="lead-summary" class="notice" role="status"></div>
+        <div class="dashboard-grid">
+          <div class="card agenda-summary-card">
+            <div class="card-head">
+              <div>
+                <h2>Resumo da agenda</h2>
+                <p>Informações registradas na abertura.</p>
+              </div>
+              <button class="btn btn-outline" id="edit">Editar dados</button>
+            </div>
+            <dl class="details">
+              <div class="detail">
+                <dt><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 11h18M8 15h2M14 15h2"/></svg><span>Período</span></dt>
+                <dd id="detail-period"></dd>
+              </div>
+              <div class="detail">
+                <dt><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="9" cy="8" r="3"/><path d="M3 21v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6M21 21v-2a6 6 0 0 0-4-5.65"/></svg><span>Protegidos</span></dt>
+                <dd id="detail-vips"></dd>
+              </div>
+              <div class="detail" id="notes-row">
+                <dt><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 4H6a3 3 0 0 0-3 3v11a3 3 0 0 0 3 3h11a3 3 0 0 0 3-3v-6M16 3a2.12 2.12 0 0 1 3 3l-9 9-4 1 1-4Z M14 5l3 3"/></svg><span>Observação inicial</span></dt>
+                <dd id="detail-notes"></dd>
+              </div>
+            </dl>
+          </div>
+          <aside class="card next-card">
+            <span class="next-symbol"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 12h16M13 5l7 7-7 7"/></svg></span><small>PRÓXIMO PASSO</small>
+            <h2>Organize a operação</h2>
+            <p>
+              Preencha o local, a empresa de segurança, o VSPP e o transporte.
+            </p>
+            <button class="btn btn-primary full" id="next-step">
+              Preencher registros operacionais</button
+            ><button class="btn btn-outline full" id="open-conclusion" disabled>
+              Conclusão bloqueada</button
+            ><span class="prototype-hint" id="conclusion-help"
+              >Salve os dados operacionais para liberar a conclusão.</span
+            >
+          </aside>
+        </div>
+        <div class="card form-card">
+          <h2>Valores da operação</h2>
+          <div id="cost-summary"></div>
+        </div>
+        <div class="card form-card">
+          <h2>Dados operacionais</h2>
+          <div id="operation-summary"></div>
+        </div>
+        <div class="card form-card">
+          <h2>Contatos importantes</h2>
+          <div id="contacts-summary"></div>
+        </div>
+        <div class="card form-card">
+          <h2>Fotos e anexos</h2>
+          <div id="gallery-summary" class="attachment-grid"></div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h2>Linha do tempo</h2>
+              <p>
+                Salvamentos e alterações desta agenda, do mais recente ao mais
+                antigo.
+              </p>
+            </div>
+            <span class="pill" id="history-count">0 registros</span>
+          </div>
+          <div id="history-list"></div>
+        </div>
+      </section>
+      <section id="operations" class="screen">
+        <button type="button" class="back" id="operation-back">
+          ← Voltar ao resumo da agenda
+        </button>
+        <div class="heading">
+          <div>
+            <span class="eyebrow">ETAPA 2 DE 3</span>
+            <h1>Registros operacionais</h1>
+            <p id="operation-agenda"></p>
+            <p>Preencha aos poucos e salve um rascunho quando precisar.</p>
+          </div>
+        </div>
+        <form id="operation-form" novalidate>
+          <div class="card form-card">
+            <div class="section-head">
+              <span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></span>
+              <div>
+                <h2>Localização do evento</h2>
+                <p>Informe o endereço e indique o acesso correto.</p>
+              </div>
+            </div>
+            <div class="location-layout">
+              <div class="form-grid two">
+                <label
+                  >Nome do local / evento<input
+                    name="venue"
+                    type="text" /></label
+                ><label
+                  >CEP<input
+                    name="cep"
+                    type="text"
+                    inputmode="numeric"
+                    maxlength="9"
+                    placeholder="00000-000" /></label
+                ><label
+                  >Rua / Avenida *<input name="street" type="text" /></label
+                ><label
+                  >Número *<input
+                    name="number"
+                    type="text"
+                    placeholder="Ex.: 100 ou S/N" /></label
+                ><label
+                  >Complemento<input name="complement" type="text" /></label
+                ><label>Bairro *<input name="district" type="text" /></label
+                ><label
+                  >Cidade / Município *<input name="city" type="text" /></label
+                ><label
+                  >UF *<select name="state">
+                    <option value="">Selecione</option>
+                    <option value="AC">AC</option>
+                    <option value="AL">AL</option>
+                    <option value="AP">AP</option>
+                    <option value="AM">AM</option>
+                    <option value="BA">BA</option>
+                    <option value="CE">CE</option>
+                    <option value="DF">DF</option>
+                    <option value="ES">ES</option>
+                    <option value="GO">GO</option>
+                    <option value="MA">MA</option>
+                    <option value="MT">MT</option>
+                    <option value="MS">MS</option>
+                    <option value="MG">MG</option>
+                    <option value="PA">PA</option>
+                    <option value="PB">PB</option>
+                    <option value="PR">PR</option>
+                    <option value="PE">PE</option>
+                    <option value="PI">PI</option>
+                    <option value="RJ">RJ</option>
+                    <option value="RN">RN</option>
+                    <option value="RS">RS</option>
+                    <option value="RO">RO</option>
+                    <option value="RR">RR</option>
+                    <option value="SC">SC</option>
+                    <option value="SP">SP</option>
+                    <option value="SE">SE</option>
+                    <option value="TO">TO</option>
+                  </select></label
+                ><label
+                  >Ponto de referência / acesso<input
+                    name="reference"
+                    type="text"
+                /></label>
+              </div>
+              <aside class="map-panel">
+                <h3>Consultar localização</h3>
+                <p id="address-preview">Preencha o endereço.</p>
+                <a
+                  id="maps-link"
+                  class="btn btn-outline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  hidden
+                  >Abrir no Google Maps ↗</a
+                >
+                <p>
+                  Requer internet. Ao clicar, somente o endereço é enviado ao
+                  Google. Confira o ponto e a entrada do evento.
+                </p>
+                <small
+                  >Mapa dentro desta tela: integração pendente de
+                  configuração.</small
+                >
+              </aside>
+            </div>
+          </div>
+          <div class="card form-card">
+            <div class="section-head">
+              <span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" focusable="false"><circle cx="9" cy="8" r="3"/><path d="M3 21v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6M21 21v-2a6 6 0 0 0-4-5.65"/></svg></span>
+              <div>
+                <h2>Equipe de segurança</h2>
+                <p>
+                  Cadastre cada profissional contratado com seu nome, CPF e
+                  gênero.
+                </p>
+              </div>
+            </div>
+            <label
+              >Empresa de segurança contratada *<input
+                name="company"
+                type="text"
+            /></label>
+            <div id="staff-list"></div>
+            <button
+              type="button"
+              class="btn btn-outline add-vip"
+              id="add-staff"
+            >
+              ＋ Adicionar VSPP
+            </button>
+          </div>
+          <div class="card form-card">
+            <div class="section-head">
+              <span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" focusable="false"><circle cx="6" cy="5" r="2"/><circle cx="18" cy="19" r="2"/><path d="M8 5h7a4 4 0 0 1 0 8H9a3 3 0 0 0 0 6h7"/></svg></span>
+              <div>
+                <h2>Transporte por trechos</h2>
+                <p>
+                  Adicione um trecho para cada veículo ou voo, na ordem da
+                  viagem. Exemplo: carro → avião → carro.
+                </p>
+              </div>
+            </div>
+            <p id="transport-mode" class="pill" aria-live="polite"></p>
+            <p class="transport-hint">
+              Ao combinar tipos diferentes, o transporte será identificado como
+              Híbrido. Datas e horários locais do computador.
+            </p>
+            <div id="leg-list"></div>
+            <button type="button" class="btn btn-outline add-vip" id="add-leg">
+              ＋ Adicionar trecho / veículo
+            </button>
+          </div>
+          <div class="card form-card">
+            <div class="section-head">
+              <span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M22 16.9v3a2 2 0 0 1-2.2 2A19.8 19.8 0 0 1 3.1 5.2 2 2 0 0 1 5.1 3h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L9 10.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.8 1.1Z"/></svg></span>
+              <div>
+                <h2>Contatos importantes</h2>
+                <p>
+                  Registre unidades médicas, unidades policiais e outros apoios
+                  para esta agenda.
+                </p>
+              </div>
+            </div>
+            <div class="contact-add-actions">
+              <button
+                type="button"
+                class="btn btn-outline"
+                data-add-contact="medical"
+              >
+                ＋ Unidade médica</button
+              ><button
+                type="button"
+                class="btn btn-outline"
+                data-add-contact="police"
+              >
+                ＋ Unidade policial / similar</button
+              ><button
+                type="button"
+                class="btn btn-outline"
+                data-add-contact="other"
+              >
+                ＋ Outro contato
+              </button>
+            </div>
+            <p id="contacts-empty" class="contact-hint">
+              Nenhum contato adicionado. Escolha uma categoria acima para
+              começar.
+            </p>
+            <div id="contact-list"></div>
+            <p class="contact-hint">
+              Adicione quantos contatos precisar. Campos sem * são opcionais;
+              use Salvar rascunho para continuar depois.
+            </p>
+          </div>
+          <div class="card form-card">
+            <div class="section-head">
+              <span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" focusable="false"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></span>
+              <div>
+                <h2>Fotos e anexos</h2>
+                <p>
+                  Adicione imagens de referência, documentos e arquivos de
+                  e-mail. Dê um título e uma observação a cada item.
+                </p>
+              </div>
+            </div>
+            <label class="attachment-picker"
+              >Adicionar fotos ou arquivos<input
+                id="attachment-files"
+                type="file"
+                multiple
+                accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.webm,.mov,.pdf,.eml,.msg,.doc,.docx,.xls,.xlsx,.txt"
+            /></label>
+            <p class="contact-hint">
+              Até 50 MB por arquivo e 200 MB por agenda, conforme o espaço disponível no navegador. Vídeos MP4, WebM e MOV (a reprodução depende do formato e do navegador). Fotos JPG, PNG, WebP e
+              GIF; PDF, Word, Excel, TXT e e-mails EML/MSG. E-mails são baixados
+              para abrir no programa compatível.
+            </p>
+            <p id="gallery-total" aria-live="polite"></p>
+            <p id="gallery-message" class="attachment-message" role="alert"></p>
+            <p id="gallery-empty">Nenhum anexo adicionado.</p>
+            <div id="gallery-editor" class="attachment-grid"></div>
+            <p class="contact-hint">
+              Salve os dados ou o rascunho para guardar os anexos. Eles ficam
+              neste navegador e computador; não são enviados à internet. Não
+              limpe os dados do navegador.
+            </p>
+          </div>
+          <div id="operation-error" class="error" role="alert"></div>
+          <div class="form-actions">
+            <button
+              type="button"
+              class="btn btn-outline btn-large"
+              id="save-draft"
+            >
+              Salvar rascunho</button
+            >
+            <button type="button" class="btn btn-outline" id="operation-report">Gerar relatório da operação</button>
+            <button type="submit" class="btn btn-primary btn-large">
+              Salvar dados operacionais
+            </button>
+          </div>
+        </form>
+      </section>
+      <section id="conclusion" class="screen form-wrap">
+        <button type="button" class="back" id="conclusion-back">
+          ← Voltar ao resumo da agenda
+        </button>
+        <div class="heading">
+          <div>
+            <span class="eyebrow">ETAPA 3 DE 3</span>
+            <h1>Conclusão da operação</h1>
+            <p id="conclusion-agenda"></p>
+            <p class="conclusion-guidance">
+              Preencha os custos da operação. O total será calculado automaticamente.
+              <span>Campos com * são obrigatórios. Se não houver custo, digite 0,00.</span>
+            </p>
+          </div>
+        </div>
+        <form id="conclusion-form" novalidate>
+          <div class="card form-card">
+            <div class="section-head">
+              <span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" focusable="false"><rect x="2" y="5" width="20" height="14" rx="3"/><circle cx="12" cy="12" r="3"/><path d="M6 12h.01M18 12h.01"/></svg></span>
+              <div>
+                <h2>Custos da operação</h2>
+                <p>
+                  VSPP: valor de todos os profissionais juntos.
+                  <br />Transportes: valor de todos os trechos juntos.
+                </p>
+              </div>
+            </div>
+            <div class="form-grid two">
+              <label
+                >Valor total de VSPP (R$) *<input
+                  id="cost-staff"
+                  inputmode="decimal"
+                  placeholder="Ex.: 1.500,00"
+                  autocomplete="off" /></label
+              ><label
+                >Valor total de transportes (R$) *<input
+                  id="cost-transport"
+                  inputmode="decimal"
+                  placeholder="Ex.: 800,00"
+                  autocomplete="off"
+              /></label>
+            </div>
+          </div>
+          <div class="card form-card extra-costs-card">
+            <h2>Outras despesas</h2>
+            <p>
+              Opcional. Adicione uma linha para cada despesa, com título e
+              valor.
+            </p>
+            <div id="cost-extras"></div>
+            <button type="button" class="btn btn-outline" id="add-cost">
+              ＋ Adicionar despesa
+            </button>
+          </div>
+          <div class="card form-card">
+            <label
+              >Observações da conclusão<textarea
+                id="cost-notes"
+                placeholder="Informações adicionais sobre os valores ou encerramento."
+              ></textarea>
+            </label>
+          </div>
+          <div id="cost-error" class="error" role="alert"></div>
+          <div class="cost-total">
+            <div>
+              <span>Valor total da operação</span
+              ><output id="cost-total" aria-live="polite">R$ 0,00</output
+              ><small id="cost-total-help"
+                >VSPP + transportes + outras despesas. Calculado
+                automaticamente.</small
+              >
+            </div>
+          </div>
+          <div class="form-actions">
+            <button
+              type="button"
+              class="btn btn-outline btn-large"
+              id="cost-draft"
+            >
+              Salvar rascunho dos valores</button
+            ><button
+              type="submit"
+              class="btn btn-primary btn-large"
+              id="cost-finish"
+            >
+              ✓ Concluir operação
+            </button>
+          </div>
+        </form>
+      </section>
+      <section id="report-screen" class="screen">
+        <div class="heading">
+          <div>
+            <span class="eyebrow">RELATÓRIOS</span>
+            <h1>Visão das operações</h1>
+            <p>Consulte volume, custos e prazo de preparação das agendas.</p>
+          </div>
+        </div>
+        <form id="report-filters" class="card form-card">
+          <h2>Filtrar agendas</h2>
+          <p>
+            O período considera a data da execução. Deixe as datas vazias para
+            consultar todo o histórico.
+          </p>
+          <div class="report-filters">
+            <label
+              >Execução a partir de<input type="date" id="report-from" /></label
+            ><label>Execução até<input type="date" id="report-to" /></label
+            ><label
+              >Protegido<select id="report-person">
+                <option value="">Todos os protegidos</option>
+              </select></label
+            ><label
+              >Situação<select id="report-status">
+                <option value="">Todas as situações</option>
+                <option value="active">Em andamento</option>
+                <option value="upcoming">Próxima</option>
+                <option value="past">Período encerrado</option>
+                <option value="completed">Concluída</option>
+              </select></label
+            >
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-outline" id="report-clear">
+              Limpar filtros</button
+            ><button type="submit" class="btn btn-primary">
+              Aplicar filtros
+            </button>
+          </div>
+          <p id="report-error" role="alert"></p>
+        </form>
+        <p id="report-scope" aria-live="polite"></p>
+        <div id="report-kpis" class="report-kpis"></div>
+        <p id="report-finance-note" class="contact-hint"></p>
+        <div class="dashboard-grid">
+          <div class="card form-card">
+            <h2>Custos por categoria</h2>
+            <p>Valores finais das operações concluídas.</p>
+            <div id="report-costs"></div>
+          </div>
+          <div class="card form-card">
+            <h2>Prazo de preparação</h2>
+            <p>
+              Mínimo de 48 horas entre o início da preparação e a execução.
+            </p>
+            <div id="report-lead"></div>
+          </div>
+        </div>
+        <div class="card form-card">
+          <h2>Agendas do período</h2>
+          <p>Clique em “Ver agenda” para consultar o registro completo.</p>
+          <div class="report-table-wrap">
+            <table class="report-table">
+              <thead>
+                <tr>
+                  <th>ID / Título</th>
+                  <th>Execução</th>
+                  <th>Protegidos</th>
+                  <th>Situação</th>
+                  <th>Preparação</th>
+                  <th>Valor total</th>
+                  <th>Ação</th>
+                </tr>
+              </thead>
+              <tbody id="report-rows"></tbody>
+            </table>
+          </div>
+          <p id="report-empty" hidden>
+            Nenhuma agenda encontrada. Ajuste os filtros para ampliar a
+            consulta.
+          </p>
+        </div>
+      </section>
+      <section id="vspp-screen" class="screen">
+        <div class="heading"><div><span class="eyebrow">CADASTROS</span><h1>Cadastro de VSPPs</h1><p>Consulte os profissionais e mantenha suas fichas atualizadas.</p></div><button type="button" class="btn btn-primary" id="vspp-new">＋ Novo VSPP</button></div>
+        <div class="card form-card">
+          <div class="form-grid two"><label>Buscar profissional<input id="vspp-search" type="search" placeholder="Nome, RE ou empresa" /></label><label>Situação<select id="vspp-filter"><option value="active">Ativos</option><option value="inactive">Inativos</option><option value="all">Todos</option></select></label></div>
+          <div class="vspp-toolbar"><button type="button" class="btn btn-outline" id="vspp-import">Importar JSON</button><button type="button" class="btn btn-outline" id="vspp-export">Exportar cadastros</button><input id="vspp-import-file" type="file" accept=".json,application/json" hidden /></div>
+          <p id="vspp-message" role="status"></p>
+        </div>
+        <p id="vspp-count" aria-live="polite"></p><div id="vspp-cards" class="vspp-cards"></div>
+      </section>
+      <section id="vehicles-screen" class="screen">
+        <div class="heading"><div><span class="eyebrow">CADASTROS</span><h1>Cadastro de veículos</h1><p>Mantenha os veículos disponíveis para os trechos terrestres.</p></div><button type="button" class="btn btn-primary" id="vehicle-new">＋ Novo veículo</button></div>
+        <div class="card form-card"><label>Buscar veículo<input id="vehicle-search" type="search" placeholder="Placa, marca, modelo ou empresa" /></label><p id="vehicle-message" role="status"></p></div>
+        <p id="vehicle-count" aria-live="polite"></p><div id="vehicle-cards" class="vspp-cards"></div>
+      </section>
+    </main>
+    <dialog id="vehicle-dialog" aria-labelledby="vehicle-dialog-title">
+      <form id="vehicle-editor">
+        <div class="vspp-dialog-heading"><h2 id="vehicle-dialog-title">Novo veículo</h2><button type="button" class="btn btn-outline" id="vehicle-close">Fechar</button></div>
+        <div id="vehicle-photo-preview"></div>
+        <label>Foto do veículo (opcional)<input id="vehicle-photo" type="file" accept="image/jpeg,image/png,image/webp" /></label>
+        <p class="muted">JPG, PNG ou WebP de até 5 MB.</p><button type="button" class="btn btn-outline" id="vehicle-photo-remove">Remover foto</button>
+        <div class="form-grid two" id="vehicle-fields"></div>
+        <p id="vehicle-error" role="alert"></p><div class="form-actions"><button type="submit" class="btn btn-primary">Salvar veículo</button></div>
+      </form>
+    </dialog>
+    <dialog id="vspp-dialog" aria-labelledby="vspp-dialog-title">
+      <form id="vspp-editor"><div class="vspp-dialog-heading"><h2 id="vspp-dialog-title">Ficha do VSPP</h2><button type="button" class="btn btn-outline" id="vspp-close">Fechar</button></div>
+        <div id="vspp-photo-preview"></div><label>Foto do profissional<input id="vspp-photo" type="file" accept="image/jpeg,image/png,image/webp" /></label><button type="button" class="btn btn-outline" id="vspp-photo-remove">Remover foto</button>
+        <div id="vspp-editor-fields"></div><p id="vspp-editor-error" role="alert"></p>
+        <div class="form-actions"><button type="submit" class="btn btn-primary">Salvar cadastro</button></div>
+      </form>
+    </dialog>
+    <div id="toast" class="toast" role="status"></div>
+    <dialog id="photo-dialog" aria-labelledby="photo-caption">
+      <button class="btn btn-outline" type="button" id="photo-close">
+        Fechar foto
+      </button>
+      <h2 id="photo-caption"></h2>
+      <img id="photo-large" alt="" />
+    </dialog>
+
+    <script src="js/armazenamento.js"></script>
+    <script src="js/dominio.js"></script>
+    <script src="js/valores.js"></script>
+    <script src="js/operacao.js"></script>
+    <script src="js/vspp-exemplos.js"></script>
+    <script src="js/cadastro-vspp.js"></script>
+    <script src="js/fotos-manuais.js"></script>
+    <script src="js/cadastro-veiculos.js"></script>
+    <script src="js/equipe-transporte.js"></script>
+    <script src="js/contatos.js"></script>
+    <script src="js/galeria.js"></script>
+    <script src="js/historico.js"></script>
+    <script src="js/conclusao.js"></script>
+    <script src="js/relatorios.js"></script>
+    <script src="js/resumo-conclusao.js"></script>
+    <script src="js/servico-conclusao.js"></script>
+    <script src="js/aplicativo.js"></script>
+    <script src="js/relatorio-operacao.js"></script>
+  </body>
+</html>
