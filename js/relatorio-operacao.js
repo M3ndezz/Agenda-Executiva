@@ -7,15 +7,24 @@
   const pair = (label,value) => `<div class="item"><dt>${escape(label)}</dt><dd>${escape(value || 'Não informado')}</dd></div>`;
   const picture = (src,alt,wide=false) => photo(src) ? `<img class="portrait ${wide?'wide':''}" src="${src}" alt="${escape(alt)}">` : `<div class="portrait ${wide?'wide':''} placeholder">Sem foto</div>`;
   const section = (id,title,body) => `<section id="${id}" class="report-section">${id!=='resumo'?'<div class="letterhead section-letterhead"><img src="'+letterhead+'" alt="Bradesco"></div>':''}<header><h2>${title}</h2><span class="section-brand">Segurança Institucional</span></header>${body}</section>`;
+  const vehicleViews = [["front","Frente"],["right","Lateral direita"],["left","Lateral esquerda"],["rear","Ré"]];
+  function vehicleBlock(v, label, connection = "") {
+    const photos = v.vehiclePhotos || {};
+    const gallery = vehicleViews.map(([key,title]) => {
+      const src = photo(photos[key]) || (key === 'front' ? photo(v.vehiclePhoto) : '');
+      return `<figure>${src ? `<img src="${src}" alt="${escape(title)}">` : '<div class="missing-view">Sem foto</div>'}<figcaption>${escape(title)}</figcaption></figure>`;
+    }).join('');
+    return `<div class="report-vehicle">${connection}<h3>${escape(label)}</h3><dl>${pair('Veículo',[v.brand,v.model].filter(Boolean).join(' '))}${v.vehicleType && v.vehicleType !== 'car' ? pair('Fabricante',v.brand)+pair('Ano de fabricação',v.year) : pair('Placa',v.plate)+pair('Cor / ano',[v.color,v.year].filter(Boolean).join(' · '))+pair('Empresa',v.vehicleCompany)}</dl><div class="report-vehicle-gallery">${gallery}</div></div>`;
+  }
   function build(agenda, now=new Date()) {
     const op=agenda.operation || {}, f=op.fields || {};
     const multi=OperationRepeater.normalize(op);
     const staff=multi.staff.filter(p=>p.name || p.cpf), legs=multi.legs.filter(t=>t.type);
     const contacts=ContactBook.normalize(op), attachments=Gallery.metadata(op);
     const draft=op.status!=='complete';
-    const summary=`<dl>${pair('Protegidos',(agenda.vips||[]).join(', '))}${pair('Execução',`${date(agenda.start)}${agenda.startTime?' às '+agenda.startTime:''}`)}${pair('Local / evento',f.venue)}${pair('Endereço',AgendaRules.address(f))}${pair('Complemento',f.complement)}${pair('Referência / acesso',f.reference)}${pair('Empresa de segurança',f.company)}${pair('Orientações iniciais',agenda.notes)}</dl>`;
-    const team=staff.length ? staff.map((p,i)=>`<article class="identity">${picture(p.photo,'Foto de '+p.name)}<div><span class="kicker">VSPP ${i+1}</span><h3>${escape(p.name || 'Nome não informado')}</h3><dl>${pair('Empresa',p.company||f.company)}${pair('Telefone',p.phone)}</dl></div></article>`).join('') : '<p>Equipe ainda não informada.</p>';
-    const route=legs.length ? legs.map((t,i)=>`<article class="leg"><h3>Trecho ${i+1} · ${escape({car:'Carro',plane:'Avião',helicopter:'Helicóptero'}[t.type]||t.type)}</h3><dl class="route">${pair('Origem / embarque',t.origin)}${pair('Destino / desembarque',t.destination)}</dl>${t.type==='car'?`<div class="identity">${picture(t.vehiclePhoto,'Foto do veículo '+(t.plate||''),true)}<dl>${pair('Veículo',[t.brand,t.model].filter(Boolean).join(' '))}${pair('Placa',t.plate)}${pair('Cor / ano',[t.color,t.year].filter(Boolean).join(' · '))}${pair('Empresa',t.vehicleCompany)}</dl></div>`:`<p>${escape(OperationRepeater.description({...t,origin:'',destination:''}))}</p>`}</article>`).join('') : '<p>Transporte ainda não informado.</p>';
+    const summary=`<dl>${pair('Protegidos',(agenda.vips||[]).join(', '))}${pair('Execução',`${date(agenda.start)}${agenda.startTime?' às '+agenda.startTime:''}`)}${pair('Local / evento',f.venue)}${pair('Endereço',AgendaRules.address(f))}${pair('Complemento',f.complement)}${pair('Referência / acesso',f.reference)}${pair('Empresas de segurança',[...new Set(staff.map(p=>p.company).filter(Boolean))].join(', '))}${pair('Orientações iniciais',agenda.notes)}</dl>`;
+    const team=staff.length ? staff.map((p,i)=>`<article class="identity">${picture(p.photo,'Foto de '+p.name)}<div><span class="kicker">VSPP ${i+1}</span><h3>${escape(p.name || 'Nome não informado')}</h3><dl>${pair('Empresa',p.company)}${pair('Celular corporativo',p.corporatePhone)}</dl></div></article>`).join('') : '<p>Equipe ainda não informada.</p>';
+    const route=legs.length ? legs.map((t,i)=>`<article class="leg"><h3>Trecho ${i+1} · ${escape({car:'Carro',plane:'Avião',helicopter:'Helicóptero'}[t.type]||t.type)}</h3><dl class="route">${pair('Origem / embarque',t.origin)}${pair('Destino / desembarque',t.destination)}</dl>${t.type==='car'?`${vehicleBlock(t,"Veículo do protegido")}${t.escort ? vehicleBlock(t.escort,"Veículo de escolta", `<p class="escort-link">Escolta vinculada: ${escape(t.plate)} → ${escape(t.escort.plate)}</p>`) : '<p class="escort-link">Veículo de escolta: não informado.</p>'}`:`<p>${escape(OperationRepeater.description({...t,origin:'',destination:''}))}</p>${t.aircraft ? vehicleBlock(t.aircraft, t.type === "plane" ? "Avião do protegido" : "Helicóptero do protegido") : ""}`}</article>`).join('') : '<p>Transporte ainda não informado.</p>';
     const support=contacts.length ? contacts.map(c=>`<article class="contact"><h3>${escape(c.title || {medical:'Unidade médica',police:'Unidade policial / similar',other:'Outro contato'}[c.category])}</h3><dl>${pair('Unidade / nome',c.name)}${pair('Telefone',[c.phone,c.extension?'Ramal '+c.extension:''].filter(Boolean).join(' · '))}${pair('Pessoa de contato',c.person)}${pair('Endereço',c.address)}${pair('Deslocamento estimado',c.minutes?c.minutes+' min':'')}${pair('Atendimento',c.hours)}${pair('Observações',c.notes)}</dl></article>`).join('') : '<p>Nenhum contato de apoio informado.</p>';
     const refs=attachments.length?`<p class="screen-only">Marque as referências que deseja incluir na impressão. Fotos são exibidas; documentos e vídeos aparecem com título e observação, sem incorporar seu conteúdo ao PDF.</p>${attachments.map((a,i)=>`<article class="reference" id="ref-${i}"><label class="screen-only"><input type="checkbox" checked onchange="this.closest('article').classList.toggle('excluded',!this.checked)"> Incluir no relatório</label><h3>${escape(a.title||a.name||'Anexo '+(i+1))}</h3><p>${escape(a.notes||a.observation||'')}</p><p class="muted">${escape(a.name||'')} · ${escape(a.extension||'arquivo')}</p><div id="reference-image-${i}"></div></article>`).join('')}`:'<p>Nenhuma referência anexada.</p>';
     return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Relatório ${escape(agenda.id)} · ${escape(agenda.title)}</title><style>
@@ -49,6 +58,28 @@
       .portrait.wide{width:180px;height:120px}
       .placeholder{display:grid;place-items:center;color:#666;font-size:12px}
       .leg,.contact,.reference{border:1px solid var(--line);border-left:3px solid var(--brand);padding:20px;margin:20px 0}
+      .report-vehicle { margin:20px 0; padding:20px; border:1px solid var(--line); border-radius:6px; break-inside:avoid; }
+      .leg { border:0; padding:0; margin:24px 0; }
+      .leg > h3 { margin:0 0 14px; }
+      .leg > .route { margin-bottom:20px; }
+      .report-vehicle > h3 { margin:0 0 18px; color:var(--brand); }
+      .report-vehicle dl { gap:14px 24px; }
+      .report-vehicle-gallery { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:16px; }
+      .report-vehicle-gallery figure { margin:0; border:1px solid var(--line); padding:12px; text-align:center; break-inside:avoid; }
+      .report-vehicle-gallery img,.missing-view { width:100%; height:145px; object-fit:contain; }
+      .missing-view { display:grid; place-items:center; background:#f6f6f6; color:#777; }
+      figcaption { font-size:11px; margin-top:6px; }
+      .escort-link { margin:0 0 18px; border-left:3px solid var(--brand); background:#f8eef0; padding:10px; font-weight:bold; }
+      @media print {
+        .leg { break-inside:auto !important; border:0; padding:0; margin:0 0 8mm; }
+        .leg > h3, .leg > .route { break-after:avoid; }
+        .report-vehicle { break-inside:avoid; page-break-inside:avoid; margin:5mm 0 7mm; padding:5mm; }
+        .report-vehicle-gallery { gap:3mm; margin-top:4mm; }
+        .report-vehicle-gallery figure { padding:3mm; }
+        .report-vehicle-gallery img,.missing-view { height:38mm; }
+        .report-vehicle > h3 { margin-bottom:4mm; }
+        .escort-link { margin:0 0 4mm; }
+      }
       .leg .identity{padding:0;border:0}
       .reference img{max-width:100%;max-height:500px;object-fit:contain}
       .reference p{white-space:pre-wrap;overflow-wrap:anywhere}

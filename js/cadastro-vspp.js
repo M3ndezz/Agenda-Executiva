@@ -38,13 +38,18 @@
     else { box.textContent = (person.name || "VSPP").split(/\s+/).filter(Boolean).slice(0,2).map((s) => s[0]).join(""); box.setAttribute("aria-label", "Sem foto"); }
     return box;
   }
+  function isoDate(value) {
+    const text = String(value || "").trim();
+    const match = text.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    return match ? `${match[3]}-${match[2]}-${match[1]}` : /^\d{4}-\d{2}-\d{2}$/.test(text) ? text : "";
+  }
   function snapshot(r) {
-    return { registryId: r.id, name: r.fields.NOME || "", cpf: r.fields.CPF || "", rg: r.fields.RG || "", gender: r.fields["GÊNERO"] || "Não informado", company: r.fields.EMPRESA || "", phone: r.fields["CEL CORPORATIVO"] || r.fields["CELULAR 1"] || "", photo: safePhoto(r.photo) };
+    return { registryId: r.id, name: r.fields.NOME || "", cpf: r.fields.CPF || "", rg: r.fields.RG || "", gender: r.fields["GÊNERO"] || "Não informado", company: r.fields.EMPRESA || "", cnv: r.fields.CNV || "", cnvExpiry: isoDate(r.fields["VAL. CNV"]), corporatePhone: r.fields["CEL CORPORATIVO"] || "", phone: r.fields["CEL CORPORATIVO"] || r.fields["CELULAR 1"] || "", photo: safePhoto(r.photo) };
   }
   function summary(person) {
     const row = el("div", "", "vspp-summary"); row.append(portrait(person));
     const info = el("div"); info.append(el("strong", person.name || "VSPP"));
-    info.append(el("p", [person.company, person.phone].filter(Boolean).join(" · ") || "Empresa e contato não informados"));
+    info.append(el("p", [person.company, person.corporatePhone ?? person.phone].filter(Boolean).join(" · ") || "Empresa e contato não informados"));
     if (isDemo(person)) info.append(el("small", "Cadastro de demonstração"));
     row.append(info); return row;
   }
@@ -195,7 +200,7 @@
       const photo = portrait(person);
       if (!safePhoto(person.photo)) photo.textContent = "Sem foto";
       preview.replaceChildren(photo);
-      contact.textContent = [person.company, person.phone].filter(Boolean).join(" · ");
+      contact.textContent = "";
       contact.hidden = !contact.textContent;
     }
     search.oninput = options;
@@ -208,7 +213,7 @@
     select.onchange = () => {
       const record = records.find((r) => r.id === select.value);
       card.vsppSnapshot = record ? snapshot(record) : {};
-      for (const key of ["name", "cpf", "gender", "rg"]) card.querySelector(`[data-field="${key}"]`).value = card.vsppSnapshot[key] || "";
+      for (const key of ["name", "cpf", "gender", "rg", "cnv", "cnvExpiry", "corporatePhone", "company"]) card.querySelector(`[data-field="${key}"]`).value = card.vsppSnapshot[key] || "";
       draw(); updatePhoto?.(); card.dispatchEvent(new Event("input", { bubbles: true }));
     };
     options(); draw(); updatePhoto?.();

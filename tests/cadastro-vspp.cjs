@@ -80,3 +80,17 @@ context.crypto = { randomUUID: () => 'test-id' };
   assert.equal(data.get('superAgendaPrototypeV2'),'existing agendas');
   console.log('Importação: atualização por RE/CPF, duplicidades e falha de gravação aprovadas.');
 })().catch((err) => { console.error(err); process.exitCode=1; });
+
+const enriched = R.snapshot({id:'test',fields:{NOME:'Teste',CNV:'CNV-123','VAL. CNV':'31/12/2027','CEL CORPORATIVO':'11000000000',EMPRESA:'Empresa teste'}});
+assert.equal(enriched.cnv,'CNV-123');
+assert.equal(enriched.cnvExpiry,'2027-12-31');
+assert.equal(enriched.corporatePhone,'11000000000');
+assert.equal(enriched.company,'Empresa teste');
+assert.equal(R.snapshot({fields:{'VAL. CNV':'2028-01-20'}}).cnvExpiry,'2028-01-20');
+const legacy = {fields:{company:'Empresa anterior'},staff:[{name:'A'},{name:'B',company:'Empresa própria'},{name:'C',company:''}]};
+const migrated = context.OperationRepeater.normalize(legacy);
+assert.equal(migrated.staff[0].company,'Empresa anterior');
+assert.equal(migrated.staff[1].company,'Empresa própria');
+assert.equal(migrated.staff[2].company,'');
+assert.equal(legacy.staff[0].company,undefined);
+console.log('Novos campos VSPP e compatibilidade de empresas antigas aprovados.');

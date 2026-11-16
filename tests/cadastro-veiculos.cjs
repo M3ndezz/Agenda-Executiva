@@ -7,7 +7,7 @@ const makeNode = () => ({value:'',textContent:'',children:[],dataset:{},listener
 let controls = [];
 const document = {createElement:makeNode,querySelector(s){if(!nodes.has(s))nodes.set(s,makeNode());return nodes.get(s)},querySelectorAll(){return controls}};
 const data = new Map();
-const context = {document,console,Option:function(text,value){return {text,value}},Event:function(type){this.type=type},crypto:{randomUUID:()=> 'test-id'},confirm:()=>true,localStorage:{getItem:k=>data.get(k)||null,setItem:(k,v)=>data.set(k,v)},addEventListener(){}};
+const context = {document,console,structuredClone,Option:function(text,value){return {text,value}},Event:function(type){this.type=type},crypto:{randomUUID:()=> 'test-id'},confirm:()=>true,localStorage:{getItem:k=>data.get(k)||null,setItem:(k,v)=>data.set(k,v)},addEventListener(){}};
 context.window=context;vm.createContext(context);
 const run = name=>vm.runInContext(fs.readFileSync(path.join(__dirname,'../js',name+'.js'),'utf8'),context);
 run('cadastro-veiculos'); run('equipe-transporte');
@@ -50,6 +50,24 @@ const remove=document.querySelector('#vehicle-cards').children[0].children[1].ch
 const before=data.get('apeVehicleRegistryV1');context.confirm=()=>false;remove.onclick();assert.equal(data.get('apeVehicleRegistryV1'),before);
 context.confirm=()=>true;context.localStorage.setItem=()=>{throw Error('Sem espaço')};remove.onclick();assert.equal(data.get('apeVehicleRegistryV1'),before);
 context.localStorage.setItem=(k,v)=>data.set(k,v);remove.onclick();assert.equal(JSON.parse(data.get('apeVehicleRegistryV1')).length,0);assert.equal(data.get('superAgendaPrototypeV2'),'historical agenda');
+// A escolta permanece independente da seleção do carro principal.
+const escortData={plate:'DEF4G56',brand:'Teste',model:'Escolta',vehicleId:'escort-id',vehiclePhotos:{front:'data:image/jpeg;base64,AAAA'}};
+const group2=makeNode();
+const card2={querySelector(s){if(s==='[data-kind="car"]')return group2;return inputs[/data-field="([^"]+)"/.exec(s)[1]]},dispatchEvent(){}};
+R.attachPicker(card2,{...snapshot,escort:escortData});
+assert.equal(card2.escortSnapshot.plate,'DEF4G56');
+escortData.plate='CHANGED';assert.equal(card2.escortSnapshot.plate,'DEF4G56');
+const pick2=group2.children[0].children[0].children[0];pick2.value='';pick2.onchange();assert.equal(card2.escortSnapshot.plate,'DEF4G56');
+const escortPicker=group2.children[2].children[0].children[0];escortPicker.value='';escortPicker.onchange();assert.equal(card2.escortSnapshot,null);
+// Aeronaves exigem apenas fabricante, modelo e ano; não usam placa.
+for(const vehicleType of ['helicopter','plane']) {
+ assert.equal(R.validate({vehicleType,brand:'Fabricante teste',model:'Modelo teste',year:'2024'}),'');
+ assert.match(R.validate({vehicleType,brand:'',model:'Modelo',year:'2024'}),/campos/);
+ assert.match(R.validate({vehicleType,brand:'Teste',model:'Modelo',year:'1800'}),/ano/);
+ const aircraft=R.snapshot({id:'air-test',vehicleType,brand:'Teste',model:'Modelo',year:'2024',photos:{rear:'data:image/jpeg;base64,AAAA'}});
+ assert.equal(aircraft.vehicleType,vehicleType);assert.equal(aircraft.vehiclePhotos.rear,'data:image/jpeg;base64,AAAA');
+}
+assert.equal(R.snapshot(saved).vehicleType,'car');
 // A damaged registry cannot be overwritten.
 data.set('apeVehicleRegistryV1','invalid');run('cadastro-veiculos');setControls(vehicle);submit();assert.equal(data.get('apeVehicleRegistryV1'),'invalid');
 console.log('Veículos: cadastro, validação, busca, seleção/manual, histórico, exclusão e falhas de armazenamento aprovados.');

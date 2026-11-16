@@ -1507,7 +1507,7 @@ select option {
 @media (max-width: 640px) {
   .sidebar {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     top: auto;
     bottom: 0;
     left: 0;
@@ -1607,3 +1607,29 @@ select option {
   .vspp-dialog-heading { align-items: flex-start; }
   .vspp-portrait { width: 60px; flex-basis: 60px; height: 68px; }
 }
+
+/* Quatro vistas clicáveis do cadastro de veículos. */
+.vehicle-gallery { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:20px 0; }
+.vehicle-gallery-item { min-width:0; }
+.vehicle-gallery-tile { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; width:100%; min-height:155px; padding:12px; border:1px dashed #b9a9af; border-radius:12px; background:#faf5f7; color:var(--red); cursor:pointer; font:inherit; }
+.vehicle-gallery-tile img { width:100%; height:110px; object-fit:contain; }
+.vehicle-gallery-tile:focus-visible { outline:3px solid var(--red); outline-offset:3px; }
+.vehicle-gallery-tile small { color:var(--muted); }
+.vehicle-gallery-remove { width:100%; margin-top:6px; }
+@media(max-width:640px) { .vehicle-gallery { grid-template-columns:repeat(2,minmax(0,1fr)); } .sidebar .nav-button { min-width:0; font-size:11px; } .sidebar .nav-button span:last-child { white-space:normal; overflow-wrap:anywhere; } }
+
+#vehicle-editor > .muted { margin:12px 0; font-size:14px; }
+#vehicle-photo-preview { margin:0 0 20px; }
+#vehicle-fields { margin:0; gap:16px; }
+#vehicle-editor > .form-actions { margin-top:20px; }
+.staff-card .operation-identity { grid-template-columns:170px minmax(0,1fr); }
+.staff-card .operation-portrait { align-self:center; justify-self:center; padding:8px; border:1px solid var(--line); border-radius:14px; background:#fff; }
+.staff-card .operation-portrait .vspp-portrait { width:150px; height:200px; border-radius:8px; }
+.escort-panel { grid-column:1/-1; border:1px solid var(--line); border-left:3px solid var(--red); border-radius:10px; padding:14px; margin-top:4px; }
+.escort-panel .vehicle-summary { margin-top:12px; }
+.escort-panel p { margin:6px 0 0; font-size:13px; color:var(--muted); }
+@media(max-width:640px) { .staff-card .operation-identity { grid-template-columns:minmax(0,1fr); } .staff-card .operation-portrait .vspp-portrait { width:135px; height:180px; } }
+
+/* Alinhamento da foto e organização dos horários do helicóptero. */
+.operation-vehicle-photo { align-self:center; justify-self:center; }
+.leg-fields[data-kind="helicopter"] > label:first-of-type { grid-column:1 / -1; }

@@ -13,3 +13,22 @@ assert(c.window.OperationReport.build({id:'empty',operation:{}}).includes('Equip
 console.log('Relatório: identidade visual, ausência de sumário, privacidade, escape de conteúdo, rascunho, referências e dados ausentes aprovados.');
 
 assert(!html.includes('border-top:2px solid var(--brand)'));assert(html.includes('alt="Bradesco"'));
+
+const four={front:'data:image/jpeg;base64,AAAA',right:'data:image/jpeg;base64,BBBB',left:'data:image/jpeg;base64,CCCC',rear:'data:image/jpeg;base64,DDDD'};
+agenda.operation.legs=[{type:'car',plate:'ABC1D23',vehiclePhotos:four,escort:{plate:'DEF4G56',model:'Escolta teste',vehiclePhotos:four}}];
+agenda.operation.staff[0].cnv='CNV-SEGREDO';agenda.operation.staff[0].cnvExpiry='2030-01-01';
+const linked=c.window.OperationReport.build(agenda);
+assert(linked.includes('Escolta vinculada: ABC1D23 → DEF4G56'));
+assert(linked.includes('Veículo do protegido'));assert(linked.includes('Veículo de escolta'));
+for(const src of Object.values(four))assert.equal(linked.split(`src="${src}"`).length-1,2);
+assert(!linked.includes('CNV-SEGREDO'));assert(!linked.includes('2030-01-01'));
+console.log('Relatório: quatro vistas dos dois veículos, vínculo de escolta e omissão de CNV aprovados.');
+
+for(const type of ['plane','helicopter']) {
+ agenda.operation.legs=[{type,aircraft:{vehicleType:type,brand:'Fabricante fictício',model:'Modelo teste',year:'2025',vehiclePhotos:four}}];
+ const rendered=c.window.OperationReport.build(agenda);
+ assert(rendered.includes('Fabricante fictício'));assert(rendered.includes('Ano de fabricação'));assert(rendered.includes('2025'));
+ assert(rendered.includes(type==='plane'?'Avião do protegido':'Helicóptero do protegido'));
+ for(const src of Object.values(four))assert(rendered.includes(`src="${src}"`));
+}
+console.log('Relatório de aeronaves: identificação e quatro vistas aprovadas.');

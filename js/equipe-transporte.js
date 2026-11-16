@@ -24,8 +24,8 @@
     const f = operation.fields || {};
     return {
       staff: Array.isArray(operation.staff)
-        ? operation.staff
-        : [{ name: f.vspp || "", cpf: f.cpf || "", gender: f.gender || "" }],
+        ? operation.staff.map((person) => ({ ...person, company: person.company ?? f.company ?? "" }))
+        : [{ name: f.vspp || "", cpf: f.cpf || "", gender: f.gender || "", company: f.company || "" }],
       legs: Array.isArray(operation.legs)
         ? operation.legs
         : [
@@ -68,6 +68,7 @@
       if (specs[t.type].some(([k]) => !t[k]))
         return prefix + "preencha os campos com *.";
       if (t.type === "car") {
+        if (t.escort && t.plate && t.escort.plate && t.plate.toUpperCase().replace(/[-\s]/g, "") === t.escort.plate.toUpperCase().replace(/[-\s]/g, "")) return prefix + "o veículo do protegido e a escolta devem ser diferentes.";
         if (
           !/^[A-Z]{3}\d[A-Z0-9]\d{2}$/.test(
             t.plate.toUpperCase().replace(/[-\s]/g, ""),
@@ -121,7 +122,7 @@
       staff: [...document.querySelectorAll(".staff-card")].map((card) => ({ ...card.vsppSnapshot, ...readCard(card) })),
       legs: [...document.querySelectorAll(".leg-card")].map((card) => {
         const all = readCard(card);
-        return { ...(all.type === "car" ? card.vehicleSnapshot : {}), ...Object.fromEntries(
+        return { ...(all.type === "car" ? { ...card.vehicleSnapshot, escort: card.escortSnapshot || null } : { aircraft: card.aircraftSnapshots?.[all.type] || null }), ...Object.fromEntries(
           [
             "type",
             "origin",
@@ -255,6 +256,10 @@
         ),
       ),
       input("rg", "RG (opcional)"),
+      input("cnv", "CNV"),
+      input("cnvExpiry", "Validade do CNV", "date"),
+      input("corporatePhone", "Celular corporativo", "tel"),
+      input("company", "Empresa contratada"),
     );
     card.append(grid);
     card.append(card.querySelector(".repeat-actions"));
@@ -299,6 +304,7 @@
     document.querySelector("#leg-list").append(card);
     fill(card, data);
     window.VehicleRegistry?.attachPicker(card, data);
+    window.VehicleRegistry?.attachAircraft(card, data);
     updateLeg(card);
     card
       .querySelector("select")

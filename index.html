@@ -21,11 +21,9 @@
       <button class="nav-button active" data-go="home">
         <span class="nav-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m3 10 9-7 9 7"/><path d="M5 9v11h5v-6h4v6h5V9"/></svg></span><span>Visão geral</span>
       </button>
-      <button class="nav-button" data-go="form">
-        <span class="nav-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4m10-4v4M3 11h18m-13 4h2m4 0h2m-8 3h2"/></svg></span><span>Agendas</span>
-      </button>
+
       <button class="nav-button" id="reports" data-report-nav>
-        <span class="nav-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 16v-3m4 3V8m4 8v-5"/></svg></span><span>Relatórios</span>
+        <span class="nav-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 16v-3m4 3V8m4 8v-5"/></svg></span><span>Dashboard</span>
       </button>
       <button class="nav-button" data-go="vspp-screen">
         <span class="nav-icon"><svg viewBox="0 0 32 32" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 23v-8c0-4 3-7 8-7h3l1-3 3 1 1 3h4c3 0 5 3 5 6v4l-7 2v5h-4v-4H10v4H6v-3Z"/><path d="M25 13h.1M29 17h-4M17 9l2 2M3 19l2 1"/></svg></span><span>VSPPs</span>
@@ -444,16 +442,11 @@
               <div>
                 <h2>Equipe de segurança</h2>
                 <p>
-                  Cadastre cada profissional contratado com seu nome, CPF e
-                  gênero.
+                  Informe os profissionais, seus documentos e contatos.
                 </p>
               </div>
             </div>
-            <label
-              >Empresa de segurança contratada *<input
-                name="company"
-                type="text"
-            /></label>
+
             <div id="staff-list"></div>
             <button
               type="button"
@@ -544,11 +537,7 @@
                 multiple
                 accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.webm,.mov,.pdf,.eml,.msg,.doc,.docx,.xls,.xlsx,.txt"
             /></label>
-            <p class="contact-hint">
-              Até 50 MB por arquivo e 200 MB por agenda, conforme o espaço disponível no navegador. Vídeos MP4, WebM e MOV (a reprodução depende do formato e do navegador). Fotos JPG, PNG, WebP e
-              GIF; PDF, Word, Excel, TXT e e-mails EML/MSG. E-mails são baixados
-              para abrir no programa compatível.
-            </p>
+
             <p id="gallery-total" aria-live="polite"></p>
             <p id="gallery-message" class="attachment-message" role="alert"></p>
             <p id="gallery-empty">Nenhum anexo adicionado.</p>
@@ -668,7 +657,7 @@
       <section id="report-screen" class="screen">
         <div class="heading">
           <div>
-            <span class="eyebrow">RELATÓRIOS</span>
+            <span class="eyebrow">DASHBOARD</span>
             <h1>Visão das operações</h1>
             <p>Consulte volume, custos e prazo de preparação das agendas.</p>
           </div>
@@ -758,17 +747,18 @@
         <p id="vspp-count" aria-live="polite"></p><div id="vspp-cards" class="vspp-cards"></div>
       </section>
       <section id="vehicles-screen" class="screen">
-        <div class="heading"><div><span class="eyebrow">CADASTROS</span><h1>Cadastro de veículos</h1><p>Mantenha os veículos disponíveis para os trechos terrestres.</p></div><button type="button" class="btn btn-primary" id="vehicle-new">＋ Novo veículo</button></div>
-        <div class="card form-card"><label>Buscar veículo<input id="vehicle-search" type="search" placeholder="Placa, marca, modelo ou empresa" /></label><p id="vehicle-message" role="status"></p></div>
+        <div class="heading"><div><span class="eyebrow">CADASTROS</span><h1>Cadastro de veículos</h1><p>Cadastre carros, helicópteros e aviões para os trechos da operação.</p></div><button type="button" class="btn btn-primary" id="vehicle-new">＋ Novo veículo</button></div>
+        <div class="card form-card"><label>Buscar veículo<input id="vehicle-search" type="search" placeholder="Tipo, placa, fabricante, modelo ou empresa" /></label><p id="vehicle-message" role="status"></p></div>
         <p id="vehicle-count" aria-live="polite"></p><div id="vehicle-cards" class="vspp-cards"></div>
       </section>
     </main>
     <dialog id="vehicle-dialog" aria-labelledby="vehicle-dialog-title">
       <form id="vehicle-editor">
         <div class="vspp-dialog-heading"><h2 id="vehicle-dialog-title">Novo veículo</h2><button type="button" class="btn btn-outline" id="vehicle-close">Fechar</button></div>
-        <div id="vehicle-photo-preview"></div>
-        <label>Foto do veículo (opcional)<input id="vehicle-photo" type="file" accept="image/jpeg,image/png,image/webp" /></label>
-        <p class="muted">JPG, PNG ou WebP de até 5 MB.</p><button type="button" class="btn btn-outline" id="vehicle-photo-remove">Remover foto</button>
+        <p class="muted">Clique em cada vista para adicionar ou trocar a foto. JPG, PNG ou WebP de até 5 MB por foto.</p>
+        <div id="vehicle-photo-preview" class="vehicle-gallery" aria-label="Fotos do veículo"></div>
+        <input id="vehicle-photo" type="file" accept="image/jpeg,image/png,image/webp" hidden />
+        <label>Tipo de veículo<select id="vehicle-type"><option value="car">Carro</option><option value="helicopter">Helicóptero</option><option value="plane">Avião</option></select></label>
         <div class="form-grid two" id="vehicle-fields"></div>
         <p id="vehicle-error" role="alert"></p><div class="form-actions"><button type="submit" class="btn btn-primary">Salvar veículo</button></div>
       </form>

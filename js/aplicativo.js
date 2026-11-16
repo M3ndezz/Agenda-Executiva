@@ -444,7 +444,7 @@
           .filter(Boolean)
           .join(" · "),
       ],
-      ["Empresa de segurança", f.company || "Não informada"],
+      ["Empresas de segurança", [...new Set(multi.staff.map(p => p.company).filter(Boolean))].join(", ") || "Não informada"],
       ["Transporte", OperationRepeater.mode(multi.legs)],
       ...multi.legs.map((leg, index) => [
         `Trecho ${index + 1}`,
@@ -482,11 +482,10 @@
       "district",
       "city",
       "state",
-      "company",
     ];
     if (!draft && required.some((key) => !fields[key]))
       message =
-        "Preencha endereço e empresa nos campos com * ou salve um rascunho.";
+        "Preencha o endereço nos campos com * ou salve um rascunho.";
     else if (
       !draft &&
       fields.cep &&
