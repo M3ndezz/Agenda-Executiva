@@ -1366,7 +1366,7 @@ button:disabled {
 .report-table td {
   padding: 16px 12px;
   border-bottom: 1px solid #e1e4e8;
-  vertical-align: top;
+  vertical-align: middle;
 }
 .report-table th {
   background: #f5f6f8;
@@ -1633,3 +1633,19 @@ select option {
 /* Alinhamento da foto e organização dos horários do helicóptero. */
 .operation-vehicle-photo { align-self:center; justify-self:center; }
 .leg-fields[data-kind="helicopter"] > label:first-of-type { grid-column:1 / -1; }
+
+.operation-gallery-host { grid-column:1/-1; }
+.operation-vehicle.manual-vehicle { grid-template-columns:minmax(0,1fr); }
+.operation-gallery { margin:16px 0; }
+.escort-panel .form-grid { margin-top:14px; }
+
+.contact-actions { justify-content:space-between; gap:12px; }
+.contact-maps { text-decoration:none; text-align:center; }
+.contact-maps[aria-disabled="true"] { opacity:.5; cursor:default; }
+@media(max-width:640px) { .contact-actions { flex-direction:column; align-items:stretch; } .contact-actions > .btn { width:100%; margin:0; } }
+
+.report-table td .dashboard-report-actions { margin-top:0; }
+.dashboard-report-actions { display:flex; flex-direction:column; gap:8px; min-width:130px; }
+.dashboard-report-actions .btn { width:100%; }
+.agenda-header-actions { display:flex; flex-direction:column; align-items:flex-end; gap:16px; }
+@media(max-width:640px) { .agenda-header-actions { width:100%; align-items:stretch; } .agenda-header-actions .pill { align-self:flex-start; } }

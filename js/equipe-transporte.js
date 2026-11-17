@@ -65,7 +65,7 @@
     for (const [i, t] of legs.entries()) {
       const prefix = `Trecho ${i + 1}: `;
       if (!specs[t.type]) return prefix + "selecione o tipo de transporte.";
-      if (specs[t.type].some(([k]) => !t[k]))
+      if (specs[t.type].filter(([k]) => !(t.aircraftMode === "manual" && ["heliCompany","airline","flight"].includes(k)) && !(t.aircraftMode === "registered" && k === "flight")).some(([k]) => !t[k]))
         return prefix + "preencha os campos com *.";
       if (t.type === "car") {
         if (t.escort && t.plate && t.escort.plate && t.plate.toUpperCase().replace(/[-\s]/g, "") === t.escort.plate.toUpperCase().replace(/[-\s]/g, "")) return prefix + "o veículo do protegido e a escolta devem ser diferentes.";
@@ -77,7 +77,17 @@
           return prefix + "confira a placa (ABC-1234 ou ABC1D23).";
         if (!/^\d{4}$/.test(t.year) || +t.year < 1900 || +t.year > 2100)
           return prefix + "informe um ano válido.";
+        if (t.escort) {
+          const e = t.escort;
+          if (["plate","brand","model","color","year"].some(k=>!e[k])) return prefix + "preencha os dados do veículo de escolta.";
+          if (!/^[A-Z]{3}\d[A-Z0-9]\d{2}$/.test(e.plate.toUpperCase().replace(/[-\s]/g,""))) return prefix + "confira a placa da escolta.";
+          if (!/^\d{4}$/.test(e.year) || +e.year < 1900 || +e.year > 2100) return prefix + "confira o ano da escolta.";
+        }
       } else {
+        if (t.aircraftMode === "manual") {
+          if (!t.aircraft || ["brand","model","year","vehicleCompany"].some(k=>!t.aircraft[k])) return prefix + "preencha fabricante, modelo, ano e empresa da aeronave.";
+          if (!/^\d{4}$/.test(t.aircraft.year) || +t.aircraft.year < 1900 || +t.aircraft.year > 2100) return prefix + "confira o ano da aeronave.";
+        }
         const start = new Date(
           t.type === "plane" ? t.departure : t.boarding,
         ).getTime();
@@ -102,9 +112,9 @@
             .filter(Boolean)
             .join(" · ")
         : t.type === "helicopter"
-          ? `${t.heliCompany || ""} · ${when(t.boarding)} → ${when(t.landing)}`
+          ? `${t.aircraft?.vehicleCompany || t.heliCompany || ""} · ${when(t.boarding)} → ${when(t.landing)}`
           : t.type === "plane"
-            ? `${t.airline || ""} · Voo ${t.flight || "a definir"} · ${when(t.departure)} → ${when(t.arrival)}`
+            ? `${t.aircraft?.vehicleCompany || t.airline || ""}${t.aircraftMode === "commercial" || (!t.aircraftMode && !t.aircraft) ? ` · Voo ${t.flight || "a definir"}` : ""} · ${when(t.departure)} → ${when(t.arrival)}`
             : "";
     return [types[t.type] || "A definir", route, detail]
       .filter(Boolean)
@@ -122,7 +132,7 @@
       staff: [...document.querySelectorAll(".staff-card")].map((card) => ({ ...card.vsppSnapshot, ...readCard(card) })),
       legs: [...document.querySelectorAll(".leg-card")].map((card) => {
         const all = readCard(card);
-        return { ...(all.type === "car" ? { ...card.vehicleSnapshot, escort: card.escortSnapshot || null } : { aircraft: card.aircraftSnapshots?.[all.type] || null }), ...Object.fromEntries(
+        return { ...(all.type === "car" ? { ...card.vehicleSnapshot, escort: card.escortSnapshot || null } : { aircraft: card.aircraftSnapshots?.[all.type] || null, aircraftMode: card.aircraftModes?.[all.type] || "commercial" }), ...Object.fromEntries(
           [
             "type",
             "origin",

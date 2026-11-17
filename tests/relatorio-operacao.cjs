@@ -32,3 +32,12 @@ for(const type of ['plane','helicopter']) {
  for(const src of Object.values(four))assert(rendered.includes(`src="${src}"`));
 }
 console.log('Relatório de aeronaves: identificação e quatro vistas aprovadas.');
+
+for (const type of ['plane','helicopter']) {
+ agenda.operation.legs=[{type,aircraftMode:'manual',aircraft:{vehicleType:type,brand:'Teste manual',model:'Modelo manual',year:'2026',vehicleCompany:'Empresa manual',vehiclePhotos:four}}];
+ const manual=c.window.OperationReport.build(agenda);
+ assert(manual.includes('Aeronave informada manualmente'));assert(manual.includes('Empresa manual'));assert(manual.includes('Traseira'));
+}
+agenda.operation.legs=[{type:'plane',aircraftMode:'commercial'}];
+assert(c.window.OperationReport.build(agenda).includes('Voo comercial'));
+console.log('Relatório: aeronaves manuais, empresa e identificação de voo comercial aprovados.');

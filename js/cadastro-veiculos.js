@@ -11,7 +11,7 @@
   const clean = (v) => String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   const newId = () => typeof crypto.randomUUID === "function" ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, "0")).join("");
   const safePhoto = (v) => typeof v === "string" && v.length < 400000 && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(v) ? v : "";
-  const views = [["front", "Frente"], ["right", "Lateral direita"], ["left", "Lateral esquerda"], ["rear", "Ré"]];
+  const views = [["front", "Frente"], ["right", "Lateral direita"], ["left", "Lateral esquerda"], ["rear", "Traseira"]];
   const photoSet = (r = {}) => Object.fromEntries(views.map(([key]) => [key, safePhoto((r.photos || r.vehiclePhotos || {})[key]) || (key === "front" ? safePhoto(r.photo || r.vehiclePhoto) : "")]));
   let photos = photoSet(), selectedView = "front";
   let records = [], loadFailed = false, editId = null, photo = "", busy = false, dirty = false;
@@ -149,6 +149,63 @@
     } catch (err) { $("#vehicle-error").textContent = err.message || "Não foi possível ler a foto."; }
     finally { busy = false; e.target.disabled = false; e.target.value = ""; drawGallery(); }
   };
+  let pendingOperationPhotos = 0;
+  function operationGallery(host, card, get, active) {
+    const hint = el("p", "Clique em cada vista para adicionar ou trocar a foto. JPG, PNG ou WebP de até 5 MB por foto.");
+    const box = el("div", "", "vehicle-gallery operation-gallery"); host.append(hint, box);
+    let processing = false;
+    function draw() {
+      hint.hidden = box.hidden = !active(); box.replaceChildren();
+      if (!active()) return;
+      const target = get(); if (!target) return;
+      target.vehiclePhotos = photoSet(target);
+      views.forEach(([key, label]) => {
+        const item = el("div", "", "vehicle-gallery-item");
+        const button = el("button", "", "vehicle-gallery-tile"); button.type = "button"; button.disabled = processing;
+        button.setAttribute("aria-label", `Adicionar ou trocar foto: ${label}`);
+        const src = target.vehiclePhotos[key];
+        if (src) { const img = el("img"); img.src = src; img.alt = label; button.append(img); }
+        button.append(el("strong", label), el("small", processing ? "Preparando foto…" : src ? "Clique para trocar" : "+ Adicionar foto"));
+        const input = el("input"); input.type = "file"; input.accept = "image/jpeg,image/png,image/webp"; input.hidden = true;
+        const message = el("span", "", "manual-photo-message"); message.setAttribute("role", "status");
+        button.onclick = () => input.click();
+        input.onchange = async () => {
+          const file = input.files[0]; if (!file || processing) return;
+          processing = true; pendingOperationPhotos++; button.disabled = true;
+          message.textContent = "Preparando foto…";
+          try {
+            if (!/^image\/(jpeg|png|webp)$/.test(file.type) || file.size > 5*1024*1024) throw Error("Escolha JPG, PNG ou WebP de até 5 MB.");
+            const bitmap = await createImageBitmap(file), scale = Math.min(1,480/Math.max(bitmap.width,bitmap.height));
+            const canvas = document.createElement("canvas"); canvas.width = Math.max(1,Math.round(bitmap.width*scale)); canvas.height = Math.max(1,Math.round(bitmap.height*scale));
+            canvas.getContext("2d").drawImage(bitmap,0,0,canvas.width,canvas.height); bitmap.close();
+            const result = canvas.toDataURL("image/jpeg",.8); if (!safePhoto(result)) throw Error("Escolha uma imagem menor.");
+            if (!card.isConnected || !active() || get() !== target) return;
+            target.vehiclePhotos[key] = result; target.vehiclePhoto = target.vehiclePhotos.front;
+            card.dispatchEvent(new Event("input",{bubbles:true})); message.textContent = "";
+          } catch (e) { message.textContent = e.message || "Não foi possível ler a foto."; }
+          finally { processing = false; pendingOperationPhotos--; button.disabled = false; input.value = ""; if (!message.textContent || message.textContent === "Preparando foto…") draw(); }
+        };
+        item.append(button,input,message);
+        if (src) {
+          const remove = el("button", "Remover foto", "btn btn-outline vehicle-gallery-remove"); remove.type = "button";
+          remove.onclick = () => { if (processing) return; target.vehiclePhotos[key] = ""; target.vehiclePhoto = target.vehiclePhotos.front; draw(); card.dispatchEvent(new Event("input",{bubbles:true})); };
+          item.append(remove);
+        }
+        box.append(item);
+      });
+    }
+    draw(); return draw;
+  }
+  function manualFields(host, target, definitions, card) {
+    const grid = el("div", "", "form-grid two");
+    definitions.forEach(([key,label]) => {
+      const wrapper = el("label",label), control = el("input"); control.type = key === "year" ? "number" : "text";
+      if(key === "year") {control.min="1900";control.max="2100";}
+      control.maxLength = 150; control.value = target[key] || "";
+      control.oninput = () => { target[key] = control.value.trim(); card.dispatchEvent(new Event("input",{bubbles:true})); };
+      wrapper.append(control); grid.append(wrapper);
+    }); host.append(grid);
+  }
   function attachPicker(card, data = {}) {
     const group = card.querySelector('[data-kind="car"]');
     card.vehicleSnapshot = { vehicleId: data.vehicleId || "", vehiclePhoto: safePhoto(data.vehiclePhoto), vehiclePhotos: photoSet(data) };
@@ -170,17 +227,25 @@
     const escortPanel = el("div", "", "escort-panel");
     const escortLabel = el("label", "Veículo de escolta");
     const escortSelect = el("select");
-    escortSelect.add(new Option("Selecione a escolta cadastrada", ""));
+    escortSelect.add(new Option("Selecione a escolta", ""));
+    escortSelect.add(new Option("Preencher manualmente", "__manual__"));
     records.filter(r => kind(r) === "car").sort((a,b) => title(a).localeCompare(title(b))).forEach(r => escortSelect.add(new Option(`${r.plate} · ${r.brand} ${r.model}`, r.id)));
     if (data.escort) { escortSelect.add(new Option(`${data.escort.plate || "Escolta"} (salvo nesta agenda)`, "__saved__")); escortSelect.value = "__saved__"; }
+    if (data.escort && !data.escort.vehicleId) escortSelect.value = "__manual__";
     const escortPreview = el("div");
-    function drawEscort() { escortPreview.replaceChildren(); if (card.escortSnapshot) escortPreview.append(summary(card.escortSnapshot)); }
+    function drawEscort() {
+      escortPreview.replaceChildren();
+      if (escortSelect.value === "__manual__") {
+        manualFields(escortPreview, card.escortSnapshot, fields.map(([k,l])=>[k,l + (k === "vehicleCompany" ? " (opcional)" : " *")]), card);
+        operationGallery(escortPreview, card, () => card.escortSnapshot, () => escortSelect.value === "__manual__" && card.querySelector('[data-field="type"]').value === "car");
+      } else if (card.escortSnapshot) escortPreview.append(summary(card.escortSnapshot));
+    }
     escortLabel.append(escortSelect);
-    escortPanel.append(escortLabel, el("p", "A escolta acompanha o protegido neste mesmo percurso. Cadastre o carro em Veículos para selecioná-lo."), escortPreview);
+    escortPanel.append(escortLabel, el("p", "A escolta acompanha o protegido neste mesmo percurso. Selecione um cadastro ou preencha manualmente."), escortPreview);
     group.append(escortPanel); drawEscort();
     escortSelect.onchange = () => {
       const record = records.find(r => r.id === escortSelect.value);
-      card.escortSnapshot = escortSelect.value === "__saved__" ? structuredClone(data.escort) : record ? snapshot(record) : null;
+      card.escortSnapshot = escortSelect.value === "__saved__" ? structuredClone(data.escort) : escortSelect.value === "__manual__" ? {vehicleType:"car", vehiclePhotos:{}} : record ? snapshot(record) : null;
       drawEscort(); card.dispatchEvent(new Event("input", {bubbles:true}));
     };
     function draw(value) {
@@ -191,12 +256,10 @@
       preview.replaceChildren(box);
     }
     draw(data);
-    card.updateManualPhoto = window.ManualPhotos?.attach(card, {
-      active: () => !select.value && card.querySelector('[data-field="type"]').value === 'car',
-      get: () => card.vehicleSnapshot.vehiclePhoto || '',
-      set: (photo) => { card.vehicleSnapshot.vehiclePhoto = photo; card.vehicleSnapshot.vehiclePhotos.front = photo; },
-      redraw: () => draw(card.vehicleSnapshot),
-    });
+    const galleryHost = el("div", "", "operation-gallery-host"); group.insertBefore(galleryHost, escortPanel);
+    const redrawGallery = operationGallery(galleryHost, card, () => card.vehicleSnapshot, () => !select.value && card.querySelector('[data-field="type"]').value === "car");
+    card.updateManualPhoto = () => { preview.hidden = !select.value; body.classList.toggle("manual-vehicle", !select.value); redrawGallery(); drawEscort(); };
+    card.updateManualPhoto();
     select.onchange = () => {
       const record = records.find((r) => r.id === select.value);
       const value = select.value === "__saved__" ? data : record ? snapshot(record) : {};
@@ -215,26 +278,44 @@
     if (loadFailed) panel.append(el("p", "Não foi possível carregar o cadastro. Você pode preencher os dados manualmente."));
   }
   function attachAircraft(card, data = {}) {
-    card.aircraftSnapshots = {};
+    card.aircraftSnapshots = {}; card.aircraftModes = {};
     for (const type of ["helicopter", "plane"]) {
       const group = card.querySelector(`[data-kind="${type}"]`);
       const panel = el("div", "", "vspp-picker vehicle-picker");
-      const label = el("label", `${kinds[type]} cadastrado`), select = el("select"), preview = el("div");
-      select.add(new Option("Sem aeronave cadastrada / voo comercial", ""));
-      records.filter(r => kind(r) === type).forEach(r => select.add(new Option(title(r),r.id)));
+      const label = el("label", `${kinds[type]} do protegido`), select = el("select"), preview = el("div");
+      select.add(new Option("Preencher manualmente", "manual"));
+      select.add(new Option("Voo comercial", "commercial"));
+      records.filter(r => kind(r) === type).forEach(r => select.add(new Option("Cadastrado: " + title(r),r.id)));
       const saved = data.type === type && data.aircraft ? structuredClone(data.aircraft) : null;
-      card.aircraftSnapshots[type] = saved;
-      if (saved) { select.add(new Option(`${title(saved)} (salvo nesta agenda)`, "__saved__")); select.value = "__saved__"; }
-      const draw = () => { preview.replaceChildren(); if (card.aircraftSnapshots[type]) preview.append(summary(card.aircraftSnapshots[type])); };
-      label.append(select); panel.append(label,preview); group.prepend(panel); draw();
+      const savedMode = data.aircraftMode || (saved ? saved.vehicleId ? "registered" : "manual" : "commercial");
+      select.value = data.type === type ? savedMode === "registered" ? "__saved__" : savedMode : "manual";
+      if (saved && savedMode === "registered") { select.add(new Option(`${title(saved)} (salvo nesta agenda)`, "__saved__")); select.value = "__saved__"; }
+      card.aircraftSnapshots[type] = saved || (select.value === "manual" ? {vehicleType:type,vehiclePhotos:{}} : null);
+      function draw() {
+        const mode = select.value === "manual" ? "manual" : select.value === "commercial" ? "commercial" : "registered";
+        card.aircraftModes[type] = mode; preview.replaceChildren();
+        const value = card.aircraftSnapshots[type];
+        if (mode === "manual") {
+          manualFields(preview,value,[["brand","Fabricante *"],["model","Modelo *"],["year","Ano de fabricação *"],["vehicleCompany","Empresa responsável *"]],card);
+          operationGallery(preview,card,()=>card.aircraftSnapshots[type],()=>select.value === "manual" && card.querySelector('[data-field="type"]').value === type);
+        } else if (value) preview.append(summary(value));
+        if(type === "plane") {
+          const flight = card.querySelector('[data-field="flight"]'); flight.parentElement.hidden = mode !== "commercial";
+          const airline = card.querySelector('[data-field="airline"]'); airline.parentElement.hidden = mode === "manual";
+        } else { card.querySelector('[data-field="heliCompany"]').parentElement.hidden = mode === "manual"; }
+      }
+      label.append(select); panel.append(label,preview); group.prepend(panel);
       select.onchange = () => {
         const record = records.find(r => r.id === select.value && kind(r) === type);
-        card.aircraftSnapshots[type] = select.value === "__saved__" ? structuredClone(saved) : record ? snapshot(record) : null;
-        draw(); card.dispatchEvent(new Event("input", {bubbles:true}));
+        card.aircraftSnapshots[type] = select.value === "manual" ? {vehicleType:type,vehiclePhotos:{}} : select.value === "__saved__" ? structuredClone(saved) : record ? snapshot(record) : null;
+        draw(); card.dispatchEvent(new Event("input",{bubbles:true}));
       };
+      const previousUpdate = card.updateManualPhoto;
+      card.updateManualPhoto = () => { previousUpdate?.(); draw(); };
+      draw();
     }
   }
   $("#vehicle-new").onclick = () => open();
   $("#vehicle-search").oninput = render;
-  window.VehicleRegistry = { render, attachPicker, attachAircraft, snapshot, validate };
+  window.VehicleRegistry = { render, attachPicker, attachAircraft, snapshot, validate, isBusy: () => pendingOperationPhotos > 0 };
 })();

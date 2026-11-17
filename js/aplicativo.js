@@ -292,6 +292,7 @@
       renderDashboard();
       show("dashboard");
     },
+    (id, button) => generateOperationReport(agendas.find(a => a.id === id), button),
   );
   $("#reports").addEventListener("click", () => {
     Reports.open();
@@ -466,7 +467,7 @@
     }
   }
   async function saveOperation(draft) {
-    if ((Gallery.isBusy() || window.ManualPhotos?.isBusy())) return;
+    if ((Gallery.isBusy() || window.ManualPhotos?.isBusy() || window.VehicleRegistry?.isBusy())) return;
     const agenda = selectedAgenda();
     if (!agenda) return;
     if (draft && agenda.conclusion?.status === "complete") return;
@@ -566,19 +567,21 @@
     ),
   );
   $("#save-draft").addEventListener("click", () => saveOperation(true));
-  $("#operation-report").addEventListener("click", async () => {
-    if ((Gallery.isBusy() || window.ManualPhotos?.isBusy())) { toast("Aguarde o processamento das fotos e dos anexos."); return; }
+  async function generateOperationReport(agenda, button) {
+    if (Gallery.isBusy() || window.ManualPhotos?.isBusy() || window.VehicleRegistry?.isBusy()) { toast("Aguarde o processamento das fotos e dos anexos."); return; }
     if (operationDirty) { toast("Salve os dados ou o rascunho antes de gerar o relatório."); return; }
-    const agenda = selectedAgenda();
     if (!agenda) return;
-    if (!agenda.operation) { toast("Salve um rascunho para gerar o relatório."); return; }
-    const button = $("#operation-report"); button.disabled = true; button.textContent = "Preparando relatório…";
+    if (!agenda.operation) { toast("Salve um rascunho dos registros operacionais para gerar o relatório."); return; }
+    const label = button.textContent;
+    button.disabled = true; button.textContent = "Preparando relatório…";
     try { await OperationReport.open(agenda); }
     catch (_) { toast("Não foi possível preparar o relatório. Tente novamente."); }
-    finally { button.disabled = false; button.textContent = "Gerar relatório da operação"; }
-  });
+    finally { button.disabled = false; button.textContent = label; }
+  }
+  $("#operation-report").addEventListener("click", (event) => generateOperationReport(selectedAgenda(), event.currentTarget));
+  $("#dashboard-operation-report").addEventListener("click", (event) => generateOperationReport(selectedAgenda(), event.currentTarget));
   $("#operation-back").addEventListener("click", () => {
-    if ((Gallery.isBusy() || window.ManualPhotos?.isBusy())) {
+    if ((Gallery.isBusy() || window.ManualPhotos?.isBusy() || window.VehicleRegistry?.isBusy())) {
       toast("Aguarde o processamento das fotos e dos anexos.");
       return;
     }
@@ -604,7 +607,7 @@
         return;
       }
       if (
-        (Gallery.isBusy() || window.ManualPhotos?.isBusy()) &&
+        (Gallery.isBusy() || window.ManualPhotos?.isBusy() || window.VehicleRegistry?.isBusy()) &&
         event.target.closest("[data-go], [data-report-nav]")
       ) {
         event.preventDefault();
@@ -626,7 +629,7 @@
     true,
   );
   window.addEventListener("beforeunload", (event) => {
-    if (operationDirty || (Gallery.isBusy() || window.ManualPhotos?.isBusy()) || Conclusion.isDirty()) {
+    if (operationDirty || (Gallery.isBusy() || window.ManualPhotos?.isBusy() || window.VehicleRegistry?.isBusy()) || Conclusion.isDirty()) {
       event.preventDefault();
       event.returnValue = "";
     }

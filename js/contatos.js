@@ -18,6 +18,10 @@
   ];
   const list = () => document.querySelector("#contact-list");
   const text = (value) => String(value ?? "").trim();
+  function mapsUrl(contact) {
+    const query = [text(contact.name), text(contact.address)].filter(Boolean).join(", ");
+    return query ? "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(query) : "";
+  }
   function normalize(operation = {}) {
     return Array.isArray(operation.contacts)
       ? operation.contacts.map((contact) =>
@@ -98,7 +102,15 @@
     card.className = "contact-card";
     card.append(document.createElement("legend"));
     const actions = document.createElement("div");
-    actions.className = "repeat-actions";
+    actions.className = "repeat-actions contact-actions";
+    const maps = document.createElement("a");
+    maps.className = "btn btn-outline contact-maps";
+    maps.textContent = "Consultar no Google Maps ↗";
+    maps.target = "_blank";
+    maps.rel = "noopener noreferrer";
+    maps.setAttribute("aria-label", "Consultar contato no Google Maps (abre em outra aba)");
+    maps.addEventListener("click", (event) => { if (!maps.hasAttribute("href")) event.preventDefault(); });
+    actions.append(maps);
     const remove = document.createElement("button");
     remove.type = "button";
     remove.className = "btn btn-outline";
@@ -176,6 +188,15 @@
     }
     category.addEventListener("change", updateCategory);
     updateCategory();
+    function updateMaps() {
+      const url = mapsUrl({name:card.querySelector('[data-contact="name"]').value,address:card.querySelector('[data-contact="address"]').value});
+      if (url) maps.href = url; else maps.removeAttribute("href");
+      maps.setAttribute("aria-disabled", String(!url));
+      maps.tabIndex = url ? 0 : -1;
+      maps.title = url ? "Buscar o nome e o endereço no Google Maps" : "Preencha o nome da unidade ou o endereço para consultar";
+    }
+    card.addEventListener("input", updateMaps);
+    updateMaps();
     list().append(card);
     renumber();
     if (focus) {
@@ -250,5 +271,5 @@
       target.append(section);
     }
   }
-  window.ContactBook = { normalize, read, validate, add, load, render };
+  window.ContactBook = { normalize, read, validate, add, load, render, mapsUrl };
 })();

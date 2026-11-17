@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 const nodes = new Map();
-const makeNode = () => ({value:'',textContent:'',children:[],dataset:{},listeners:{},append(...n){this.children.push(...n)},prepend(n){this.children.unshift(n)},replaceChildren(...n){this.children=n},add(n){this.children.push(n)},addEventListener(k,fn){this.listeners[k]=fn},setAttribute(){},showModal(){this.open=true},close(){this.open=false}});
+const makeNode = () => ({value:'',textContent:'',children:[],dataset:{},listeners:{},classList:{toggle(){}},insertBefore(n,b){this.children.splice(this.children.indexOf(b),0,n)},append(...n){this.children.push(...n)},prepend(n){this.children.unshift(n)},replaceChildren(...n){this.children=n},add(n){this.children.push(n)},addEventListener(k,fn){this.listeners[k]=fn},setAttribute(){},showModal(){this.open=true},close(){this.open=false}});
 let controls = [];
 const document = {createElement:makeNode,querySelector(s){if(!nodes.has(s))nodes.set(s,makeNode());return nodes.get(s)},querySelectorAll(){return controls}};
 const data = new Map();
@@ -29,6 +29,7 @@ document.querySelector('#vehicle-search').value='inexistente';R.render();assert.
 document.querySelector('#vehicle-search').value='';R.render();
 // Picker fills only this leg and preserves route fields; historical data gets its own option.
 const inputs=Object.fromEntries(Object.keys(vehicle).map(k=>[k,{value:''}]));
+inputs.type={value:'car'};
 const group=makeNode();const card={vehicleSnapshot:{},querySelector(s){if(s==='[data-kind="car"]')return group;return inputs[/data-field="([^"]+)"/.exec(s)[1]]},dispatchEvent(){this.changed=true}};
 R.attachPicker(card,{...snapshot,color:'Branco'});
 const select=group.children[0].children[0].children[0];
@@ -58,7 +59,7 @@ R.attachPicker(card2,{...snapshot,escort:escortData});
 assert.equal(card2.escortSnapshot.plate,'DEF4G56');
 escortData.plate='CHANGED';assert.equal(card2.escortSnapshot.plate,'DEF4G56');
 const pick2=group2.children[0].children[0].children[0];pick2.value='';pick2.onchange();assert.equal(card2.escortSnapshot.plate,'DEF4G56');
-const escortPicker=group2.children[2].children[0].children[0];escortPicker.value='';escortPicker.onchange();assert.equal(card2.escortSnapshot,null);
+const escortPicker=group2.children[3].children[0].children[0];escortPicker.value='';escortPicker.onchange();assert.equal(card2.escortSnapshot,null);
 // Aeronaves exigem apenas fabricante, modelo e ano; não usam placa.
 for(const vehicleType of ['helicopter','plane']) {
  assert.equal(R.validate({vehicleType,brand:'Fabricante teste',model:'Modelo teste',year:'2024'}),'');
@@ -68,6 +69,32 @@ for(const vehicleType of ['helicopter','plane']) {
  assert.equal(aircraft.vehicleType,vehicleType);assert.equal(aircraft.vehiclePhotos.rear,'data:image/jpeg;base64,AAAA');
 }
 assert.equal(R.snapshot(saved).vehicleType,'car');
+// Manual escort and aircraft survive serialization and reopening independently.
+const walk=n=>[n,...(n.children||[]).flatMap(walk)];
+escortPicker.value='__manual__';escortPicker.onchange();
+assert.equal(walk(group2).filter(n=>n.className==='vehicle-gallery-tile').length,8);
+const escortFields=group2.children[3].children[2].children[0].children.map(n=>n.children[0]);
+['DEF4567','Marca escolta','Modelo escolta','Azul','2024','Empresa escolta'].forEach((v,i)=>{escortFields[i].value=v;escortFields[i].oninput()});
+assert.equal(card2.escortSnapshot.plate,'DEF4567');
+const aircraftGroups={helicopter:makeNode(),plane:makeNode()};
+const aircraftInputs=Object.fromEntries(['type','flight','airline','heliCompany','departure','arrival','boarding','landing'].map(k=>[k,{value:k==='type'?'plane':'',parentElement:makeNode()}]));
+const aircraftCard={isConnected:true,querySelector(s){const g=/data-kind="([^"]+)"/.exec(s);return g?aircraftGroups[g[1]]:aircraftInputs[/data-field="([^"]+)"/.exec(s)[1]]},dispatchEvent(){}};
+R.attachAircraft(aircraftCard,{type:'plane',aircraftMode:'manual',aircraft:{vehicleType:'plane',brand:'Embraer',model:'Phenom',year:'2024',vehicleCompany:'Operadora'}});
+const planeSelect=aircraftGroups.plane.children[0].children[0].children[0];
+assert.equal(planeSelect.value,'manual');assert.equal(aircraftCard.aircraftSnapshots.plane.brand,'Embraer');
+assert.equal(aircraftInputs.flight.parentElement.hidden,true);
+assert.equal(walk(aircraftGroups.plane).filter(n=>n.className==='vehicle-gallery-tile').length,4);
+const manualAircraft=structuredClone(aircraftCard.aircraftSnapshots.plane);
+planeSelect.value='commercial';planeSelect.onchange();assert.equal(aircraftCard.aircraftSnapshots.plane,null);assert.equal(aircraftInputs.flight.parentElement.hidden,false);
+planeSelect.value='manual';planeSelect.onchange();assert.equal(aircraftCard.aircraftModes.plane,'manual');
+context.AgendaRules={validCPF:()=>true};const staff=[{name:'Teste',cpf:'00000000000',gender:'Masculino'}];
+const leg={type:'plane',aircraftMode:'manual',aircraft:manualAircraft,departure:'2026-11-17T12:00',arrival:'2026-11-17T13:00'};
+assert.equal(context.OperationRepeater.validate(staff,[leg]),'');
+assert.match(context.OperationRepeater.validate(staff,[{...leg,aircraft:{...manualAircraft,vehicleCompany:''}}]),/empresa/);
+assert.match(context.OperationRepeater.validate(staff,[{...leg,aircraftMode:'commercial'}]),/campos/);
+assert.doesNotMatch(context.OperationRepeater.description(leg),/Voo a definir/);
+assert.match(context.OperationRepeater.description(leg),/Operadora/);
+console.log('Operação: escolta manual, quatro vistas, modos de aeronave, reabertura e validação aprovados.');
 // A damaged registry cannot be overwritten.
 data.set('apeVehicleRegistryV1','invalid');run('cadastro-veiculos');setControls(vehicle);submit();assert.equal(data.get('apeVehicleRegistryV1'),'invalid');
 console.log('Veículos: cadastro, validação, busca, seleção/manual, histórico, exclusão e falhas de armazenamento aprovados.');

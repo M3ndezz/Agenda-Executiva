@@ -1,7 +1,7 @@
 (() => {
   const $ = (s) => document.querySelector(s),
     money = (c) => AgendaMoney.money(c);
-  let getAgendas, situation, openAgenda;
+  let getAgendas, situation, openAgenda, generateReport;
   let applied = { from: "", to: "", person: "", status: "" };
   const normalize = (x) => String(x).trim().toLocaleLowerCase("pt-BR");
   function select(agendas, filters, statusOf) {
@@ -181,7 +181,13 @@
         button.type = "button";
         button.setAttribute("aria-label", "Ver agenda " + a.id);
         button.onclick = () => openAgenda(a.id);
-        action.append(button);
+        const report = element("button", "Gerar relatório", "btn btn-primary");
+        report.type = "button";
+        report.setAttribute("aria-label", "Gerar relatório da agenda " + a.id);
+        report.onclick = () => generateReport(a.id, report);
+        const actions = element("div", "", "dashboard-report-actions");
+        actions.append(button, report);
+        action.append(actions);
         row.append(action);
         body.append(row);
       });
@@ -211,10 +217,11 @@
     $("#report-error").textContent = "";
     render();
   }
-  function init(get, status, openFn) {
+  function init(get, status, openFn, reportFn) {
     getAgendas = get;
     situation = status;
     openAgenda = openFn;
+    generateReport = reportFn;
     $("#report-filters").addEventListener("submit", (event) => {
       event.preventDefault();
       const filters = {
